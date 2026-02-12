@@ -1,0 +1,92 @@
+{
+    "name": "Santorini Experiment",
+    "description": "Experiment for tsunami simulations in Samos Area",
+    "version": "1.0.0",
+    "URL": "",
+    "keywords": [],
+    "organizations": [],
+    "authors": [
+        {
+        "identifiers": [
+            {
+            "scheme": "orcid",
+            "value": "0000-0002-6603-9106"
+            }
+        ]
+        }
+    ],
+    "projects": [],
+    "license": "gpl-3",
+    "open_access": true,
+    "embargo_date": "2024-05-01",
+    "related_publications": [],
+    "simulations": [
+        {
+        "name": "Tsunami Simulation Samos n.1",
+        "path": "Tsunami Simulation Samos n.1/",
+        "description": "Tsunami Simulation for Samos using rupt file rupt1",
+        "version": "1.0.0",
+        "URL": "",
+        "dataset_paths": ["SRTM15Plus", "bathy.grd"]
+        }
+    ],
+    "datasets": [
+        {
+        "name": "SRTM15Plus",
+        "path": "SRTM15Plus",
+        "type": "input",
+        "description": "Raw topo-bathymetric data",
+        "file_format": "KMZ",
+        "encoding": "",
+        "version": "1.0.0",
+        "URL": "https://doi.org/10.5069/G92R3PT9",
+        "organizations": [],
+        "license": "gpl-3",
+        "open_access": true,
+        "related_publications": []
+        },
+        {
+        "name": "bathy.grd",
+        "path": "bathy.grd",
+        "type": "output",
+        "description": "Simulation grid  of Samos area",
+        "file_format": "grd",
+        "encoding": "",
+        "version": "1.0.0",
+        "URL": "",
+        "spatial_coverage": {
+            "bbox": [20, 31, 34, 41]
+        },
+        "organizations": [],
+        "authors": [],
+        "license": "gpl-3",
+        "open_access": true,
+        "related_publications": []
+        },
+        {
+        "name": "max_max.nc",
+        "path": "max_max.nc",
+        "type": "product",
+        "description": "Global output with maximum of Hmax of all simulations",
+        "file_format": "netCDF",
+        "encoding": "",
+        "version": "1.0.0",
+        "URL": "",
+        "spatial_coverage": {
+            "bbox": [20, 31, 34, 41]
+        },
+        "organizations": [],
+        "authors": [],
+        "projects": [],
+        "license": "gpl-3",
+        "open_access": true,
+        "related_publications": [],
+        "relationship": [
+            {
+            "type": "aggregated",
+            "target": []
+            }
+        ]
+        }
+    ]
+    }
