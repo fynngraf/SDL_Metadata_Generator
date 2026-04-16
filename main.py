@@ -42,8 +42,15 @@ for item in folder.rglob('*'):
         file_name= item.name
         file_format= file_name.split(".")[-1]
         description= "Unknown"
+
+        #file_type setzen aus Pfad_info
+        if "input" in str(item).lower():
+            file_type = "input"
+        else:
+            file_type = "output"
+
         if all_d_s != "": all_d_s+=","
-        all_d_s+= templ_d_s.render(prefix= prefix, file_name= file_name, file_format= file_format, description= description, file_type= "output")
+        all_d_s+= templ_d_s.render(prefix= prefix, file_name= file_name, file_format= file_format, description= description, file_type= file_type)
 
 with (open(output_file, "w") as f):
     f.write(templ_exp.render(all_simulations= all_s_r, all_datasets= all_d_s))
