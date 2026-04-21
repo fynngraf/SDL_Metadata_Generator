@@ -41,22 +41,22 @@ def parse_args():
         description="Generate metadata.json for experiments"
     )
     parser.add_argument(
-        "--base-path",
+        "--sdl_dir",
         default="./",
         help="Path to the base directory of experiments"
     )
     parser.add_argument(
-        "--experiment",
+        "--exp",
         default="",
         help="Name of the experiment"
     )
     parser.add_argument(
-        "--output-file",
+        "--output_file",
         default="metadata.json",
         help="Name of the output file"
     )
     parser.add_argument(
-        "--templates-dir",
+        "--templates_dir",
         default="./templates",
         help="Path to the templates directory"
     )
@@ -65,8 +65,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    experiment_id = args.experiment #e.g. "sdl_exp_309"
-    input_path = Path(args.base_path) / experiment_id #e.g. ./templates/sdl_exp_309
+    exp_id = args.exp #e.g. "sdl_exp_309"
+    input_path = Path(args.sdl_dir) / exp_id #e.g. ./templates/sdl_exp_309
     output_file = input_path / args.output_file
     #sdl_exp_xyz = "sdl_exp_309"
 
@@ -75,7 +75,7 @@ def main():
 
     #with open(meta_path, encoding='utf-8') as f:
     #    meta = json.load(f)
-    print(f'Experiment : {experiment_id}')
+    print(f'Experiment : {exp_id}')
     print(f'Input Path : {input_path}')
     print(f'Output File : {output_file}')
 
