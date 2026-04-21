@@ -1,0 +1,42 @@
+{
+    "name": "Test Alto Tiberina Catalog 100 entries",
+    "description": "All entries of the Alto Tiberina Catalog",
+    "version": "1.0.0",
+    "URL": "",
+    "keywords": [],
+    "organizations": [],
+    "authors": [
+      {
+        "givenName": "Christadler",
+        "familyName": "Iris",
+        "identifiers": [
+          {
+            "scheme": "orcid",
+            "value": "0000-0002-9293-0306"
+          }
+        ]
+      },
+      {
+        "givenName": "Marchandon",
+        "familyName": "Mathilde",
+        "identifiers": [
+          {
+            "scheme": "orcid",
+            "value": "0000-0001-7883-8397"
+          }
+        ]
+      }
+    ],
+    "projects": [],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "simulations": [
+          {{all_simulations}}
+        ],
+        "datasets": [
+          {{all_datasets}}
+        ]
+      }
+    ]
+}

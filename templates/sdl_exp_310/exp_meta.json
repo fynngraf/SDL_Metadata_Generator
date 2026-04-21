@@ -1,0 +1,8 @@
+{
+  "name": "SDL Experiment 309",
+  "description": "test description",
+  "author": [
+	  {"given_name":"Iris", "family name":"Christadler","orcid":"0000-0002-9293-0306"}, 
+	  {"given_name":"Mathilde", "family name":"Marchandon","orcid":"0000-0001-7883-8397"}],
+  "version": "1.0"
+}

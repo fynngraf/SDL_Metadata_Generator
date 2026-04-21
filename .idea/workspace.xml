@@ -5,6 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58fabfa4-e6d4-4acb-9df2-7279aa3e1b24" name="Changes" comment="1st working version">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/TODO.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/dataset.json.j2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/exp_meta.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/experiment.json.j2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/experiment.json.j2.orig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/simulation.json.j2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/dataset.json.j2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/exp_meta.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/simulation.json.j2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -21,12 +31,12 @@
     &quot;assignee&quot;: &quot;christadler&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/christadler/SDL_Metadata_Wizard.git&quot;,
-    &quot;accountId&quot;: &quot;0b7f0789-43e8-4acd-a3c3-bc48309ebaf8&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/fynngraf/SDL_Metadata_Generator",
+    "accountId": "0b7f0789-43e8-4acd-a3c3-bc48309ebaf8"
   }
-}</component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
@@ -41,9 +51,16 @@
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/fynng/PycharmProjects/PythonProject/SDL_Metadata_Generator"
+    "last_opened_file_path": "/home/christadler/githubclones/SDL_Metadata_Generator",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -54,7 +71,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
+        <option value="bundled-python-sdk-b63d5a1f7c97-b61e75351b1f-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.22158.340" />
       </set>
     </attachedChunks>
   </component>
@@ -76,6 +93,9 @@
     </task>
     <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

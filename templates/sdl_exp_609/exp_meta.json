@@ -1,0 +1,9 @@
+{
+  "name": "SDL Experiment 609: TA RADIATE",
+  "description": "output data from SeisSol runs of TA RADIATE",
+  "author": [
+	  {"given_name":"Iris", "family name":"Christadler","orcid":"0000-0002-9293-0306"}, 
+	  {"given_name":"Francesco", "family name":"Mosconi","orcid":"0000-0001-7883-8397"}],
+  "version": "1.0"
+  "sdl_dir": "../sdl_data/radiate"
+}

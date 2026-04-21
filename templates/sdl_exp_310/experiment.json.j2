@@ -1,0 +1,42 @@
+{
+    "name": {{name}},
+    "description": {{description}},
+    "version": {{version}},
+    "URL": "",
+    "keywords": [],
+    "organizations": [],
+    "authors": [
+      {
+        "givenName": {{authors[0].givenName}},
+        "familyName": {{authors[0].familyName}},
+        "identifiers": [
+          {
+            "scheme": "orcid",
+            "value": {{authors[0].orcid}},
+          }
+        ]
+      },
+      {
+        "givenName": {{authors[1].givenName}},
+        "familyName": {{authors[1].familyName}},
+        "identifiers": [
+          {
+            "scheme": "orcid",
+            "value": {{authors[1].orcid}},
+          }
+        ]
+      }
+    ],
+    "projects": [],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "simulations": [
+          {{all_simulations}}
+        ],
+        "datasets": [
+          {{all_datasets}}
+        ]
+      }
+    ]
+}

@@ -6,6 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 #load metadata
 def load_exp_meta(exp_path: Path) -> dict:
+    # Immer den ganzen Dateipfad übergeben
     meta_file = exp_path / "meta.json"
 
     if not meta_file.exists():
@@ -82,6 +83,7 @@ def main():
     if not input_path.exists():
         raise FileNotFoundError(f"Input path does not exist: {input_path}")
 
+    # meta = load_exp_meta(input_path / meta.json)
     meta = load_exp_meta(input_path)
     print(f'metadata : {meta}')
 

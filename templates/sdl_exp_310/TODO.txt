@@ -1,0 +1,3 @@
+# generate experiment.json.j2 from exp_meta.json
+# read in experiment.json.j2 as jinja template like the others
+
