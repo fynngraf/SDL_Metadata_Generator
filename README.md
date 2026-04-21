@@ -1,6 +1,6 @@
 # SDL Metadata Generator
 
-will generate metadata for the https:sdl....
+will generate metadata for the https://sdl....
 
 ## Usage
 ```bash
