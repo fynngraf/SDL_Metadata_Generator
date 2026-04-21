@@ -4,18 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="58fabfa4-e6d4-4acb-9df2-7279aa3e1b24" name="Changes" comment="1st working version">
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/TODO.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/dataset.json.j2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/exp_meta.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/experiment.json.j2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/experiment.json.j2.orig" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_310/simulation.json.j2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/dataset.json.j2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/exp_meta.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/sdl_exp_609/simulation.json.j2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    <list default="true" id="58fabfa4-e6d4-4acb-9df2-7279aa3e1b24" name="Changes" comment="added README and example templates">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +82,23 @@
       <option name="project" value="LOCAL" />
       <updated>1770899793290</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="added README and example templates">
+      <option name="closed" value="true" />
+      <created>1776770299658</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776770299658</updated>
+    </task>
+    <task id="LOCAL-00003" summary="added README and example templates">
+      <option name="closed" value="true" />
+      <created>1776770582348</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776770582348</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -110,6 +117,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="1st working version" />
-    <option name="LAST_COMMIT_MESSAGE" value="1st working version" />
+    <MESSAGE value="added README and example templates" />
+    <option name="LAST_COMMIT_MESSAGE" value="added README and example templates" />
   </component>
 </project>
