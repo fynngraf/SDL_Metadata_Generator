@@ -22,10 +22,14 @@ def load_exp_meta(exp_path: Path) -> dict:
 
 # generate experiment.json.j2 from exp.meta.json
 def generate_exp_template(env: Environment, meta: dict, templates_dir: str, exp_id: str):
+
+    #several authors possible
+    author = ", ".join(meta['author']) if isinstance(meta['author'], list) else meta['author']
+
     template = """\
 {
     "name":        \"""" + meta['name'] + """\",
-    "author":      \"""" + meta['author'] + """\",
+    "author":      \"""" + author + """\",
     "version":     \"""" + meta['version'] + """\",
     "description": \"""" + meta['description'] + """\",
     "simulations": [ {{ all_simulations }} ],
@@ -147,3 +151,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+#Stand: 06.05.2026
