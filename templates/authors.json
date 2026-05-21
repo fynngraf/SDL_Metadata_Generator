@@ -1,0 +1,103 @@
+{
+  "36": {
+    "givenName": "Iris",
+    "familyName": "Christadler",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0002-9293-0306"
+      }
+    ]
+  },
+  "37": {
+    "givenName": "Mathilde",
+    "familyName": "Marchandon",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0001-7883-8397"
+      }
+    ]
+  },
+  "39": {
+    "givenName": "Jeremy",
+    "familyName": "Wong",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "82": {
+    "givenName": "Alice-Agnes",
+    "familyName": "Gabriel",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "78": {
+    "givenName": "Claudia",
+    "familyName": "Abril",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "68": {
+    "givenName": "Elizabeth",
+    "familyName": "Madden",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "81": {
+    "givenName": "Thomas",
+    "familyName": "Ulrich",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "76": {
+    "givenName": "Hamed",
+    "familyName": "Davari",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "75": {
+    "givenName": "Benedikt",
+    "familyName": "Halldorsson",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  },
+  "01": {
+    "givenName": "",
+    "familyName": "",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-000x-xxxx-xxxx"
+      }
+    ]
+  }
+}
+

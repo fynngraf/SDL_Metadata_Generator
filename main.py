@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
-#load metadata
+
+# load metadata
 def load_exp_meta(exp_path: Path) -> dict:
     # complete path
     meta_file = exp_path / "exp.meta.json"
@@ -13,25 +14,72 @@ def load_exp_meta(exp_path: Path) -> dict:
         print(f"Metadata file does not exist: {meta_file} - use default")
         return {
             "name": exp_path.name,
-            "author": "unknown",
+            "author": [],
             "version": "unknown",
             "description": ""
         }
-    with open(meta_file, 'r') as _:   #encoding='utf-8'
+    with open(meta_file, 'r') as _:   # encoding='utf-8'
         return json.load(_)
 
-# generate experiment.json.j2 from exp.meta.json
-def generate_exp_template(env: Environment, meta: dict, templates_dir: str, exp_id: str):
 
-    #several authors possible
-    author = ", ".join(meta['author']) if isinstance(meta['author'], list) else meta['author']
+# load author database
+def load_authors(templates_dir: str) -> dict:
+    authors_file = Path(templates_dir) / "authors.json"
+
+    if not authors_file.exists():
+        print(f"Authors file does not exist: {authors_file}")
+        return {}
+
+    with open(authors_file, 'r') as _:   # encoding='utf-8'
+        return json.load(_)
+
+
+# resolve author IDs to full author info
+def resolve_authors(author_ids, authors_db: dict) -> list:
+    # single ID as string → convert to list
+    if isinstance(author_ids, str):
+        author_ids = [author_ids]
+
+    resolved = []
+    for author_id in author_ids:
+        if author_id in authors_db:
+            resolved.append(authors_db[author_id])
+        else:
+            print(f"[WARN] Author ID '{author_id}' not found in authors.json - skipping")
+
+    return resolved
+
+
+# generate authors JSON string for template
+def generate_authors_str(authors: list) -> str:
+    authors_list = []
+    for author in authors:
+        # build identifiers list
+        identifiers = []
+        for identifier in author.get('identifiers', []):
+            identifiers.append(
+                f'{{"scheme": "{identifier["scheme"]}", "value": "{identifier["value"]}"}}'
+            )
+        identifiers_str = ", ".join(identifiers)
+
+        authors_list.append(
+            f'{{"givenName": "{author["givenName"]}", '
+            f'"familyName": "{author["familyName"]}", '
+            f'"identifiers": [{identifiers_str}]}}'
+        )
+
+    return ", ".join(authors_list)
+
+
+# generate experiment.json.j2 from exp.meta.json
+def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
 
     template = """\
 {
     "name":        \"""" + meta['name'] + """\",
-    "author":      \"""" + author + """\",
     "version":     \"""" + meta['version'] + """\",
     "description": \"""" + meta['description'] + """\",
+    "authors":     [ """ + authors_str + """ ],
     "simulations": [ {{ all_simulations }} ],
     "datasets":    [ {{ all_datasets }} ]
 }
@@ -43,6 +91,7 @@ def generate_exp_template(env: Environment, meta: dict, templates_dir: str, exp_
 
     templ = env.from_string(template)
     return templ
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -70,6 +119,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def main():
     args = parse_args()
 
@@ -88,6 +138,16 @@ def main():
     meta = load_exp_meta(Path(args.templates_dir) / exp_id)
     print(f'metadata : {meta}')
 
+    # load author database
+    authors_db = load_authors(args.templates_dir)
+
+    # resolve author IDs to full author info
+    authors = resolve_authors(meta['author'], authors_db)
+    print(f'authors : {authors}')
+
+    # generate authors string for template
+    authors_str = generate_authors_str(authors)
+
     # set Jinja2 Environment
     env = Environment(loader=FileSystemLoader(args.templates_dir))
 
@@ -96,7 +156,7 @@ def main():
     templ_d_s = env.get_template('dataset.json.j2')
 
     # generate experiment.json.j2 from exp.meta.json dynamically
-    templ_exp = generate_exp_template(env, meta, args.templates_dir, exp_id)
+    templ_exp = generate_exp_template(env, meta, authors_str, args.templates_dir, exp_id)
 
     # write general information to metadata.json
     all_s_r = ""
@@ -114,7 +174,7 @@ def main():
                 all_s_r += ","
             all_s_r += templ_s_r.render(simulation_name=item.name)
 
-        #  for all files add a dataset
+        # for all files add a dataset
         elif item.is_file():
             print(f"Generate dataset for: {item.name}")
             prefix = item.parent.name
@@ -149,9 +209,6 @@ def main():
         )
     print(f"\nfinished, metadata written to: {output_file}")
 
+
 if __name__ == '__main__':
     main()
-
-
-
-#Stand: 06.05.2026
