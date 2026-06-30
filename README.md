@@ -16,8 +16,8 @@ requirements.txt (with all python packages)
 ```bash
 cd templates
 mkdir sdl_exp_NewDIR
-cp sdl_exp_blueprint/exp_meta.json sdl_exp_NewDIR/exp_meta.json
-vi sdl_exp_NewDIR/exp_meta.json
+cp sdl_exp_blueprint/exp.meta.json sdl_exp_NewDIR/exp.meta.json
+vi sdl_exp_NewDIR/exp.meta.json
 cp sdl_exp_blueprint/dataset.json.j2 sdl_exp_NewDIR/dataset.json.j2
 vi sdl_exp_NewDIR/dataset.json.j2
 cp sdl_exp_blueprint/simulation.json.j2 sdl_exp_NewDIR/simulation.json.j2

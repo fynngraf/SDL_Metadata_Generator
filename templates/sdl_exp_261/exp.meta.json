@@ -1,0 +1,7 @@
+{
+  "name": "TA_PhyDRMT_Taiwan_Input",
+  "description": "Input data files for Geo-INQUIRE TA PhyDRMT (Neha, NTU Taiwan)",
+  "author": ["66"],
+  "version": "1.0.0",
+  "sdl_dir": "../sdl_data/radiate"
+}

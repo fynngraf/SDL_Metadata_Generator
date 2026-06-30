@@ -72,7 +72,9 @@ def generate_authors_str(authors: list) -> str:
 
 
 # generate experiment.json.j2 from exp.meta.json
-def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
+
+#test new format, see ne function generate_exp_template below
+#def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
 
     template = """\
 {
@@ -82,6 +84,30 @@ def generate_exp_template(env: Environment, meta: dict, authors_str: str, templa
     "authors":     [ """ + authors_str + """ ],
     "simulations": [ {{ all_simulations }} ],
     "datasets":    [ {{ all_datasets }} ]
+}
+"""
+    # save experiment.json.j2
+    template_path = Path(templates_dir) / exp_id / "experiment.json.j2"
+    with open(template_path, "w") as f:
+        f.write(template)
+
+    templ = env.from_string(template)
+    return templ
+
+def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
+
+    template = """\
+{
+    "name":        \"""" + meta['name'] + """\",
+    "description": \"""" + meta['description'] + """\",
+    "authors":     [ """ + authors_str + """ ],
+    "versions":    [
+        {
+            "version":     \"""" + meta['version'] + """\",
+            "simulations": [ {{ all_simulations }} ],
+            "datasets":    [ {{ all_datasets }} ]
+        }
+    ]
 }
 """
     # save experiment.json.j2
@@ -125,7 +151,7 @@ def main():
 
     exp_id = args.exp                            # e.g. "sdl_exp_309"
     input_path = Path(args.sdl_dir) / exp_id     # e.g. ./sdl_exp_309
-    output_file = input_path / args.output_file  # e.g. ./sdl_exp_309/metadata.json
+    output_file = Path(args.templates_dir) / exp_id / args.output_file  # e.g. ./sdl_exp_309/metadata.json
 
     print(f'Experiment : {exp_id}')
     print(f'Input Path : {input_path}')
