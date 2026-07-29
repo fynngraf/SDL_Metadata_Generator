@@ -178,19 +178,45 @@ def main():
             continue
 
         if item.is_dir():
+            # Nur die OBERSTE Ordnerebene (direkte Kinder von input_path, z.B. J1-J5,
+            # Mesh) wird als eigenstaendiges "simulation"-Objekt angelegt. Tiefer
+            # verschachtelte Ordner (seissol_param, mesh0, surface_cell, ...) sind
+            # reine Gruppierungsordner fuer Dateien und werden NICHT als eigene
+            # simulation-Objekte erzeugt - sonst entsteht pro Verschachtelungsebene
+            # ein zusaetzliches SDL-Objekt, was wie Duplikate wirkt.
+            rel_dir_parts = item.relative_to(input_path).parts
+            if len(rel_dir_parts) > 1:
+                continue
+
             print(f"Generate simulation for: {item.name}")
             if all_s_r:
                 all_s_r += ","
             description = get_simulation_description(descriptions, item.name)
-            all_s_r += templ_s_r.render(simulation_name=item.name, description=description)
+            simulation_path = item.relative_to(input_path).as_posix()
+            all_s_r += templ_s_r.render(
+                simulation_name=item.name,
+                simulation_path=simulation_path,
+                description=description
+            )
 
         # for all files add a dataset
         elif item.is_file():
             print(f"Generate dataset for: {item.name}")
             prefix = item.parent.name
             file_name = item.name
-            file_format = get_file_format(file_name)
-            description = get_dataset_description(descriptions, file_name, prefix)
+
+            # vollstaendiger relativer Pfad INKLUSIVE Dateiname (z.B.
+            # "J1/seissol_param/job.sh" oder einfach "README" bei Root-Dateien) -
+            # analog zu simulation_path bei Ordnern. Verhindert kollidierende
+            # Pfade bei gleich benannten Dateien in verschiedenen Unterordnern
+            # (z.B. "mesh0/connect.bin" unter jedem Jx) und vermeidet den
+            # Sonderfall "./README" bei Dateien direkt im Root.
+            rel_item_parts = item.relative_to(input_path).parts
+            dataset_path = item.relative_to(input_path).as_posix()
+            top_level_name = rel_item_parts[0] if len(rel_item_parts) > 1 else None
+
+            file_format = get_file_format(descriptions, file_name, prefix)
+            description = get_dataset_description(descriptions, file_name, prefix, top_level_name)
             file_type = get_file_type(descriptions, file_name, prefix, str(item))
 
             #  TODO: More elaborate descriptions and input|output|data product|etc
@@ -198,6 +224,7 @@ def main():
             if all_d_s != "": all_d_s += ","
             all_d_s += templ_d_s.render(
                 prefix=prefix,
+                dataset_path=dataset_path,
                 file_name=file_name,
                 file_format=file_format,
                 description=description,

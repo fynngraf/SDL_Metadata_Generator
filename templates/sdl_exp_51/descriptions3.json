@@ -1,0 +1,47 @@
+{
+    "file_extensions": {
+        "sh": {
+            "description": "Slurm batch scheduling files for {top_level} run",
+            "file_type": "input",
+            "file_format": "SH"
+        },
+        "par": {
+            "description": "Parameter.par SeisSol file for {top_level} run (draws in .yaml files)",
+            "file_type": "input",
+            "file_format": "PAR"
+        },
+        "yaml": {
+            "description": "Additional SeisSol parameter files for {top_level} run",
+            "file_type": "input",
+            "file_format": "YAML"
+        }
+    },
+    "folders": {
+        "seissol_param": {
+            "file_type": "input"
+        },
+        "fault": {
+            "description": "Fault output (paired .xdmf/.h5 files: slip and slip-rate on the fault surface)",
+            "file_type": "output"
+        },
+        "surface": {
+            "description": "Surface output (paired .xdmf/.h5 files: surface displacement field)",
+            "file_type": "output"
+        }
+    },
+    "simulations": {
+        "J1": "Simulation output for rupture model J1 (Yokota et al., 2011)",
+        "J2": "Simulation output for rupture model J2 (Minson et al., 2014)",
+        "J3": "Simulation output for rupture model J3 (Bletery et al., 2014)",
+        "J4": "Simulation output for rupture model J4 (Melgar and Bock, 2015)",
+        "J5": "Simulation output for rupture model J5 (Yamazaki et al., 2018)"
+    },
+    "datasets": {
+        "Mesh": {
+            "description": "Mesh file for all runs",
+            "file_type": "input"
+        }
+    },
+    "folder_files": {},
+    "folder_extensions": {}
+}
