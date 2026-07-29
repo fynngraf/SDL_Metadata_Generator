@@ -1,0 +1,76 @@
+{
+    "file_extensions": {
+        "par": "input",
+        "csv": "data_product",
+        "yaml": "input",
+        "sh": {
+            "file_type": "input",
+            "description": "Shell-Skript zum Starten des Jobs"
+        },
+        "h5": {
+            "file_type": "output"
+        },
+        "xdmf": {
+            "description": "XDMF-Metadatendatei zu den HDF5-Ergebnissen"
+        }
+    },
+
+    "folders": {
+        "input_folder_1": "Description for all datasets in this folder",
+        "output_folder_1": {
+            "description": "Description for all datasets in this output folder",
+            "file_type": "output"
+        },
+        "config_folder": {
+            "file_type": "input"
+        }
+    },
+
+    "simulations": {
+        "simulation_name_1": "Description of simulation 1",
+        "simulation_name_2": {
+            "description": "Langform ist seit dem Bugfix ebenfalls erlaubt (file_type wird hier aktuell nicht ausgewertet)"
+        }
+    },
+
+    "datasets": {
+        "parameters.par": "Main parameter file (Kurzform, nur Beschreibung)",
+        "job.sbatch": {
+            "description": "SLURM-Submit-Skript",
+            "file_type": "input"
+        },
+        "readme_notes.dat": {
+            "file_type": "input"
+        }
+    },
+
+    "folder_files": {
+        "output_scen4_normal": {
+            "parameters.par": "Kurzform: nur Beschreibung, kein file_type",
+            "result.h5": {
+                "description": "Nur in diesem Ordner andere Bedeutung als global in 'datasets'",
+                "file_type": "data_product"
+            }
+        },
+        "input_folder_1": {
+            "special_config.yaml": {
+                "file_type": "input"
+            }
+        }
+    },
+
+    "folder_extensions": {
+        "output_scen4_normal": {
+            "sh": "input",
+            "csv": {
+                "description": "CSV-Auswertungen speziell in diesem Output-Ordner",
+                "file_type": "data_product"
+            }
+        },
+        "output_scen6_normal": {
+            "h5": {
+                "file_type": "output"
+            }
+        }
+    }
+}

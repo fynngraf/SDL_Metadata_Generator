@@ -3,6 +3,7 @@ import json
 #import numpy as np
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
+from descriptions import load_descriptions, get_simulation_description, get_dataset_description, get_file_type, get_file_format
 
 
 # load metadata
@@ -72,28 +73,6 @@ def generate_authors_str(authors: list) -> str:
 
 
 # generate experiment.json.j2 from exp.meta.json
-
-#test new format, see ne function generate_exp_template below
-#def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
-
-    template = """\
-{
-    "name":        \"""" + meta['name'] + """\",
-    "version":     \"""" + meta['version'] + """\",
-    "description": \"""" + meta['description'] + """\",
-    "authors":     [ """ + authors_str + """ ],
-    "simulations": [ {{ all_simulations }} ],
-    "datasets":    [ {{ all_datasets }} ]
-}
-"""
-    # save experiment.json.j2
-    template_path = Path(templates_dir) / exp_id / "experiment.json.j2"
-    with open(template_path, "w") as f:
-        f.write(template)
-
-    templ = env.from_string(template)
-    return templ
-
 def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
 
     template = """\
@@ -112,6 +91,7 @@ def generate_exp_template(env: Environment, meta: dict, authors_str: str, templa
 """
     # save experiment.json.j2
     template_path = Path(templates_dir) / exp_id / "experiment.json.j2"
+    template_path.parent.mkdir(parents=True, exist_ok=True)
     with open(template_path, "w") as f:
         f.write(template)
 
@@ -149,9 +129,9 @@ def parse_args():
 def main():
     args = parse_args()
 
-    exp_id = args.exp                            # e.g. "sdl_exp_309"
-    input_path = Path(args.sdl_dir) / exp_id     # e.g. ./sdl_exp_309
-    output_file = Path(args.templates_dir) / exp_id / args.output_file  # e.g. ./sdl_exp_309/metadata.json
+    exp_id = args.exp                                                        # e.g. "sdl_exp_309"
+    input_path = Path(args.sdl_dir) / exp_id                                # e.g. ./sdl_exp_309
+    output_file = Path(args.templates_dir) / exp_id / args.output_file      # e.g. ./templates/sdl_exp_309/metadata.json
 
     print(f'Experiment : {exp_id}')
     print(f'Input Path : {input_path}')
@@ -173,6 +153,9 @@ def main():
 
     # generate authors string for template
     authors_str = generate_authors_str(authors)
+
+    # load descriptions
+    descriptions = load_descriptions(args.templates_dir, exp_id)
 
     # set Jinja2 Environment
     env = Environment(loader=FileSystemLoader(args.templates_dir))
@@ -198,24 +181,19 @@ def main():
             print(f"Generate simulation for: {item.name}")
             if all_s_r:
                 all_s_r += ","
-            all_s_r += templ_s_r.render(simulation_name=item.name)
+            description = get_simulation_description(descriptions, item.name)
+            all_s_r += templ_s_r.render(simulation_name=item.name, description=description)
 
         # for all files add a dataset
         elif item.is_file():
             print(f"Generate dataset for: {item.name}")
             prefix = item.parent.name
             file_name = item.name
-            file_format = file_name.split(".")[-1]
-            description = "Unknown"
+            file_format = get_file_format(file_name)
+            description = get_dataset_description(descriptions, file_name, prefix)
+            file_type = get_file_type(descriptions, file_name, prefix, str(item))
 
             #  TODO: More elaborate descriptions and input|output|data product|etc
-            #  needed for temp_d_s: file_name, prefix, file_format, description, file_type
-
-            # set file_type from path_info
-            if "input" in str(item).lower():
-                file_type = "input"
-            else:
-                file_type = "output"
 
             if all_d_s != "": all_d_s += ","
             all_d_s += templ_d_s.render(

@@ -1,0 +1,7 @@
+{
+  "name": "Benchmarking",
+  "description": "Test experiment for Benchmarking uploading of repositories",
+  "author": ["36"],
+  "version": "1.0.0",
+  "sdl_dir": "../..."
+}

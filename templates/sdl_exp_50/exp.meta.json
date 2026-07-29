@@ -1,0 +1,7 @@
+{
+  "name": "TA_CapCosSC-HPC_InputData",
+  "description": "Input data for TA CapCosSC-HPC",
+  "author": ["36"],
+  "version": "1.0.0",
+  "sdl_dir": "../..."
+}

@@ -1,0 +1,17 @@
+{
+    "folders": {
+        "input_files": "All input csv files required for CyberShake simulation on MN5 in Barcelona supercomputing center (BSC)",
+        "source": "Kinematic rupture sources created by the Graves-Pitarka method for selected magnitude-fault-plane pairs. SRF format documentation: https://strike.scec.org/scecpedia/Standard_Rupture_Format",
+        "PSA": "Peak pseudo-spectral acceleration (PSA) at 1.0 s, computed from two horizontal seismograms at 81 synthetic seismic stations.",
+        "atkinson2023": "Peak pseudo-spectral acceleration (PSA) at 1.0 s, computed from two horizontal seismograms at 81 synthetic seismic stations."
+    },
+    "simulations": {
+        "simulation_name_1": "Description of simulation 1",
+        "simulation_name_2": "Description of simulation 2"
+    },
+    "datasets": {
+        "file_name_1.ext": "Description of file 1",
+        "file_name_2.ext": "Description of file 2"
+    }
+}
+

@@ -1,0 +1,7 @@
+{
+  "name": "AltoTiberina Catalog 100_runs",
+  "description": "AltoTiberinaCatalog of the full 100 runs for DT-Geo workflow",
+  "author": ["36", "37"],
+  "version": "1.0.0",
+  "sdl_dir": "../..."
+}

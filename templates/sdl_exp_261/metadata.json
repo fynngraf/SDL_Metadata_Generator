@@ -1,0 +1,357 @@
+{
+    "name":        "TA_PhyDRMT_Taiwan_Input",
+    "version":     "1.0.0",
+    "description": "Input data files for Geo-INQUIRE TA PhyDRMT (Neha, NTU Taiwan)",
+    "authors":     [ {"givenName": "Neha", "familyName": "", "identifiers": [{"scheme": "orcid", "value": "0000-0002-7721-4985"}]} ],
+    "simulations": [                   {
+                    "datasetPaths": [],
+                    "description": "Simulation Run No. inputTW0000",
+                    "name": "inputTW0000",
+                    "path": "inputTW0000/"
+                  },                  {
+                    "datasetPaths": [],
+                    "description": "Simulation Run No. inputTW0001",
+                    "name": "inputTW0001",
+                    "path": "inputTW0001/"
+                  },                  {
+                    "datasetPaths": [],
+                    "description": "Simulation Run No. inputTW0003",
+                    "name": "inputTW0003",
+                    "path": "inputTW0003/"
+                  },                  {
+                    "datasetPaths": [],
+                    "description": "Simulation Run No. inputTW0004",
+                    "name": "inputTW0004",
+                    "path": "inputTW0004/"
+                  },                  {
+                    "datasetPaths": [],
+                    "description": "Simulation Run No. mesh",
+                    "name": "mesh",
+                    "path": "mesh/"
+                  } ],
+    "datasets":    [                   {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "slurm",
+                    "name": "Leonardo_inputsTW0000.slurm",
+                    "path": "inputTW0000/Leonardo_inputsTW0000.slurm",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "par",
+                    "name": "parameters.par",
+                    "path": "inputTW0000/parameters.par",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_fault.yaml",
+                    "path": "inputTW0000/TW_22_fault.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_forced_rupture_time.yaml",
+                    "path": "inputTW0000/TW_22_forced_rupture_time.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_initial_stress.yaml",
+                    "path": "inputTW0000/TW_22_initial_stress.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material1D.yaml",
+                    "path": "inputTW0000/TW_22_material1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "path": "inputTW0000/TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Herrmann_2011.yaml",
+                    "path": "inputTW0000/TW_22_material_rhomulambda_Herrmann_2011.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_plastic_cohesion.yaml",
+                    "path": "inputTW0000/TW_22_plastic_cohesion.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_rhomulambda1D.yaml",
+                    "path": "inputTW0000/TW_22_rhomulambda1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0000",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_sig_zz.yaml",
+                    "path": "inputTW0000/TW_22_sig_zz.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "par",
+                    "name": "parameters.par",
+                    "path": "inputTW0001/parameters.par",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_fault.yaml",
+                    "path": "inputTW0001/TW_22_fault.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_forced_rupture_time.yaml",
+                    "path": "inputTW0001/TW_22_forced_rupture_time.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_initial_stress.yaml",
+                    "path": "inputTW0001/TW_22_initial_stress.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material1D.yaml",
+                    "path": "inputTW0001/TW_22_material1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "path": "inputTW0001/TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Herrmann_2011.yaml",
+                    "path": "inputTW0001/TW_22_material_rhomulambda_Herrmann_2011.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_plastic_cohesion.yaml",
+                    "path": "inputTW0001/TW_22_plastic_cohesion.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_rhomulambda1D.yaml",
+                    "path": "inputTW0001/TW_22_rhomulambda1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0001",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_sig_zz.yaml",
+                    "path": "inputTW0001/TW_22_sig_zz.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "out",
+                    "name": "34948031.out",
+                    "path": "inputTW0003/34948031.out",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "out",
+                    "name": "34951756.out",
+                    "path": "inputTW0003/34951756.out",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "out",
+                    "name": "34953306.out",
+                    "path": "inputTW0003/34953306.out",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "par",
+                    "name": "parameters.par",
+                    "path": "inputTW0003/parameters.par",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "neha",
+                    "name": "parameters.par.neha",
+                    "path": "inputTW0003/parameters.par.neha",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "vikas",
+                    "name": "parameters.par.vikas",
+                    "path": "inputTW0003/parameters.par.vikas",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "sbatch",
+                    "name": "sbatch.sbatch",
+                    "path": "inputTW0003/sbatch.sbatch",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "select_gpu",
+                    "name": "select_gpu",
+                    "path": "inputTW0003/select_gpu",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "dat",
+                    "name": "tpv12_13_receivers.dat",
+                    "path": "inputTW0003/tpv12_13_receivers.dat",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_fault.yaml",
+                    "path": "inputTW0003/TW_22_fault.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_forced_rupture_time.yaml",
+                    "path": "inputTW0003/TW_22_forced_rupture_time.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_initial_stress.yaml",
+                    "path": "inputTW0003/TW_22_initial_stress.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material1D.yaml",
+                    "path": "inputTW0003/TW_22_material1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Huang_taiwan_2014.yaml",
+                    "path": "inputTW0003/TW_22_material_rhomulambda_Huang_taiwan_2014.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_rhomulambda1D.yaml",
+                    "path": "inputTW0003/TW_22_rhomulambda1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0003",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_sig_zz.yaml",
+                    "path": "inputTW0003/TW_22_sig_zz.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "out",
+                    "name": "34997679.out",
+                    "path": "inputTW0004/34997679.out",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "par",
+                    "name": "parameters.par",
+                    "path": "inputTW0004/parameters.par",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "neha",
+                    "name": "parameters.par.neha",
+                    "path": "inputTW0004/parameters.par.neha",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "vikas",
+                    "name": "parameters.par.vikas",
+                    "path": "inputTW0004/parameters.par.vikas",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "sbatch",
+                    "name": "sbatch.sbatch",
+                    "path": "inputTW0004/sbatch.sbatch",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "select_gpu",
+                    "name": "select_gpu",
+                    "path": "inputTW0004/select_gpu",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "dat",
+                    "name": "tpv12_13_receivers.dat",
+                    "path": "inputTW0004/tpv12_13_receivers.dat",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_fault.yaml",
+                    "path": "inputTW0004/TW_22_fault.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_forced_rupture_time.yaml",
+                    "path": "inputTW0004/TW_22_forced_rupture_time.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_initial_stress.yaml",
+                    "path": "inputTW0004/TW_22_initial_stress.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material1D.yaml",
+                    "path": "inputTW0004/TW_22_material1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "path": "inputTW0004/TW_22_material_rhomulambda_Carannante_2013.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_material_rhomulambda_Huang_taiwan_2014.yaml",
+                    "path": "inputTW0004/TW_22_material_rhomulambda_Huang_taiwan_2014.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_rhomulambda1D.yaml",
+                    "path": "inputTW0004/TW_22_rhomulambda1D.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run inputTW0004",
+                    "fileFormat": "yaml",
+                    "name": "TW_22_sig_zz.yaml",
+                    "path": "inputTW0004/TW_22_sig_zz.yaml",
+                    "type": "input"
+                  },                  {
+                    "description": "Unknown for Simulation Run mesh",
+                    "fileFormat": "Tawain_mesh_twofaults",
+                    "name": "Tawain_mesh_twofaults",
+                    "path": "mesh/Tawain_mesh_twofaults",
+                    "type": "output"
+                  },                  {
+                    "description": "Unknown for Simulation Run mesh",
+                    "fileFormat": "xdmf",
+                    "name": "Tawain_mesh_twofaults.xdmf",
+                    "path": "mesh/Tawain_mesh_twofaults.xdmf",
+                    "type": "output"
+                  } ]
+}

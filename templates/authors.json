@@ -99,15 +99,26 @@
       }
     ]
   },
-  "01": {
-    "givenName": "",
-    "familyName": "",
+  "113": {
+    "givenName": "Duo",
+    "familyName": "Li",
     "identifiers": [
       {
         "scheme": "orcid",
-        "value": "0000-000x-xxxx-xxxx"
+        "value": "0000-0002-8641-337X"
+      }
+    ]
+  },
+  "114": {
+    "givenName": "Natalia",
+    "familyName": "Zamora",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0002-9754-6143"
       }
     ]
   }
 }
+
 

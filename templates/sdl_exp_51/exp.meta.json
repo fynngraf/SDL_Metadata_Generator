@@ -1,0 +1,7 @@
+{
+  "name": "TA_FFM-Tohoku",
+  "description": "Simulation output for the study `Dynamic Viability of Finite-Fault Slip Models with Ensemble Kalman Inversion by Wong et al.",
+  "author": ["39","36"],
+  "version": "1.0.0",
+  "sdl_dir": "../..."
+}
