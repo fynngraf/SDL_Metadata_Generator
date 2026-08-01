@@ -3,7 +3,19 @@ import json
 #import numpy as np
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
-from descriptions import load_descriptions, get_simulation_description, get_dataset_description, get_file_type, get_file_format
+from file_format_lookup import get_file_format, load_format_map, DEFAULT_MAP_FILE as DEFAULT_FORMAT_MAP_FILE
+from file_type_lookup import (
+    get_file_type,
+    load_type_map,
+    load_path_type_map,
+    DEFAULT_MAP_FILE as DEFAULT_TYPE_MAP_FILE,
+    DEFAULT_PATH_MAP_FILE as DEFAULT_TYPE_PATH_MAP_FILE,
+)
+from readme_description_lookup import (
+    load_readme_descriptions,
+    get_simulation_description,
+    get_dataset_description,
+)
 
 
 # load metadata
@@ -37,7 +49,7 @@ def load_authors(templates_dir: str) -> dict:
 
 # resolve author IDs to full author info
 def resolve_authors(author_ids, authors_db: dict) -> list:
-    # single ID as string → convert to list
+    # single ID as string -> convert to list
     if isinstance(author_ids, str):
         author_ids = [author_ids]
 
@@ -154,8 +166,53 @@ def main():
     # generate authors string for template
     authors_str = generate_authors_str(authors)
 
-    # load descriptions
-    descriptions = load_descriptions(args.templates_dir, exp_id)
+    # Load the file_format dictionary once (stored centrally in templates_dir,
+    # shared across all experiments, similar to authors.json). It is passed
+    # around as a live dict reference so that newly added entries take effect
+    # immediately for subsequent files in this run, without needing to reload
+    # the file from disk in between.
+    format_map_file = str(Path(args.templates_dir) / DEFAULT_FORMAT_MAP_FILE)
+    format_map = load_format_map(format_map_file)
+
+    # Same idea for the file_type dictionary (input/output/data_product/...
+    # based on file extension), loaded once and shared across the whole run.
+    type_map_file = str(Path(args.templates_dir) / DEFAULT_TYPE_MAP_FILE)
+    type_map = load_type_map(type_map_file)
+
+    # Path-keyword dictionary for file_type (e.g. "output" anywhere in the
+    # path -> "output"), checked before falling back to the extension
+    # dictionary above.
+    type_path_map_file = str(Path(args.templates_dir) / DEFAULT_TYPE_PATH_MAP_FILE)
+    type_path_map = load_path_type_map(type_path_map_file)
+
+    # Load description assignments from the README's embedded yaml block.
+    # The README lives alongside the raw experiment data (input_path), not
+    # in templates_dir, since it is authored by the experiment's authors
+    # together with the data itself. Both "README" and "README.txt" are
+    # accepted.
+    readme_candidates = [input_path / "README", input_path / "README.txt", input_path / "README.md"]
+    readme_path = next((p for p in readme_candidates if p.exists()), None)
+    if readme_path:
+        print(f"Reading descriptions from: {readme_path}")
+        readme_descriptions = load_readme_descriptions(str(readme_path))
+
+        # Ask whether the README file itself should also become a dataset
+        # entry in metadata.json, or whether it was only placed in the
+        # experiment folder to supply description assignments and should
+        # therefore be excluded from the generated output.
+        answer = input(
+            f"\nShould metadata also be generated for the README file itself "
+            f"({readme_path.name})? [y/n]: "
+        ).strip().lower()
+        include_readme_as_dataset = answer in ("y", "yes", "j", "ja")
+        if include_readme_as_dataset:
+            print(f"-> {readme_path.name} will be included as a dataset entry.\n")
+        else:
+            print(f"-> {readme_path.name} will be excluded from the generated metadata.json.\n")
+    else:
+        print("No README/README.txt/README.md found in input path - using generic fallback descriptions")
+        readme_descriptions = {"folders": {}, "extensions": {}, "folders_fallback": {}}
+        include_readme_as_dataset = True  # irrelevant, there is no README file to exclude anyway
 
     # set Jinja2 Environment
     env = Environment(loader=FileSystemLoader(args.templates_dir))
@@ -171,19 +228,45 @@ def main():
     all_s_r = ""
     all_d_s = ""
 
-    # go through all directories
-    for item in sorted(input_path.rglob('*')):
+    all_items = sorted(input_path.rglob('*'))
+
+    # Phase 1: collect all dataset paths up front and group them by their
+    # top-level folder, so we can fill in "datasetPaths" for each simulation
+    # entry in phase 2 (SDL appears to create implicit duplicate objects per
+    # simulation if datasetPaths is left empty).
+    dataset_paths_by_top_level = {}
+    for item in all_items:
+        if item.name in ("exp.meta.json", args.output_file):
+            continue
+        if readme_path is not None and item == readme_path and not include_readme_as_dataset:
+            continue
+        if item.is_file():
+            rel_item_parts = item.relative_to(input_path).parts
+            top_level_name = rel_item_parts[0] if len(rel_item_parts) > 1 else None
+            if top_level_name:
+                dataset_path = item.relative_to(input_path).as_posix()
+                dataset_paths_by_top_level.setdefault(top_level_name, []).append(dataset_path)
+
+    # Phase 2: generate simulations and datasets as before, now with the
+    # datasetPaths list filled in for each simulation entry.
+    for item in all_items:
         # skip exp.meta.json and output file
         if item.name in ("exp.meta.json", args.output_file):
             continue
 
+        # skip the README file itself if the user chose not to include it
+        # as a dataset entry (it was only used to supply descriptions)
+        if readme_path is not None and item == readme_path and not include_readme_as_dataset:
+            continue
+
         if item.is_dir():
-            # Nur die OBERSTE Ordnerebene (direkte Kinder von input_path, z.B. J1-J5,
-            # Mesh) wird als eigenstaendiges "simulation"-Objekt angelegt. Tiefer
-            # verschachtelte Ordner (seissol_param, mesh0, surface_cell, ...) sind
-            # reine Gruppierungsordner fuer Dateien und werden NICHT als eigene
-            # simulation-Objekte erzeugt - sonst entsteht pro Verschachtelungsebene
-            # ein zusaetzliches SDL-Objekt, was wie Duplikate wirkt.
+            # Only the TOP-LEVEL folders (direct children of input_path, e.g.
+            # J1-J5, Mesh) are created as standalone "simulation" objects.
+            # Deeper nested folders (seissol_param, mesh0, surface_cell, ...)
+            # are purely structural grouping folders for files and are NOT
+            # turned into their own simulation objects - otherwise every
+            # nesting level would produce an additional SDL object, which
+            # looks like duplicates.
             rel_dir_parts = item.relative_to(input_path).parts
             if len(rel_dir_parts) > 1:
                 continue
@@ -191,11 +274,18 @@ def main():
             print(f"Generate simulation for: {item.name}")
             if all_s_r:
                 all_s_r += ","
-            description = get_simulation_description(descriptions, item.name)
+
+            # Description sourced from the README's embedded yaml block
+            # (see readme_description_lookup.py).
+            description = get_simulation_description(readme_descriptions, item.name)
+
             simulation_path = item.relative_to(input_path).as_posix()
+            dataset_paths = dataset_paths_by_top_level.get(item.name, [])
+            dataset_paths_json = json.dumps(dataset_paths)
             all_s_r += templ_s_r.render(
                 simulation_name=item.name,
                 simulation_path=simulation_path,
+                dataset_paths_json=dataset_paths_json,
                 description=description
             )
 
@@ -205,19 +295,33 @@ def main():
             prefix = item.parent.name
             file_name = item.name
 
-            # vollstaendiger relativer Pfad INKLUSIVE Dateiname (z.B.
-            # "J1/seissol_param/job.sh" oder einfach "README" bei Root-Dateien) -
-            # analog zu simulation_path bei Ordnern. Verhindert kollidierende
-            # Pfade bei gleich benannten Dateien in verschiedenen Unterordnern
-            # (z.B. "mesh0/connect.bin" unter jedem Jx) und vermeidet den
-            # Sonderfall "./README" bei Dateien direkt im Root.
+            # Full relative path INCLUDING the file name (e.g.
+            # "J1/seissol_param/job.sh", or simply "README" for files
+            # directly at the root) - analogous to simulation_path for
+            # folders. Prevents colliding paths for identically named files
+            # in different subfolders (e.g. "mesh0/connect.bin" under every
+            # Jx) and avoids the "./README" edge case for root-level files.
             rel_item_parts = item.relative_to(input_path).parts
             dataset_path = item.relative_to(input_path).as_posix()
+            # Top-level folder this file lives under (e.g. "J1"), used to
+            # resolve the "{folder}" placeholder in README-sourced
+            # descriptions. None for files directly at the root (e.g. README
+            # itself, or Mesh files if Mesh has no further nesting).
             top_level_name = rel_item_parts[0] if len(rel_item_parts) > 1 else None
 
-            file_format = get_file_format(descriptions, file_name, prefix)
-            description = get_dataset_description(descriptions, file_name, prefix, top_level_name)
-            file_type = get_file_type(descriptions, file_name, prefix, str(item))
+            file_format = get_file_format(file_name, map_file=format_map_file, format_map=format_map)
+            file_type = get_file_type(
+                file_name,
+                item_path=str(item.parent),
+                map_file=type_map_file,
+                type_map=type_map,
+                path_map_file=type_path_map_file,
+                path_type_map=type_path_map,
+            )
+
+            # Description sourced from the README's embedded yaml block
+            # (see readme_description_lookup.py).
+            description = get_dataset_description(readme_descriptions, file_name, prefix, top_level_name)
 
             #  TODO: More elaborate descriptions and input|output|data product|etc
 
