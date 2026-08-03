@@ -118,6 +118,16 @@
         "value": "0000-0002-9754-6143"
       }
     ]
+  },
+  "139": {
+    "givenName": "Niu",
+    "familyName": "Zihua",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0003-4213-3322"
+      }
+    ]
   }
 }
 

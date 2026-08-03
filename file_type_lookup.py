@@ -9,6 +9,12 @@ persistent dictionaries (JSON files):
    used directly (e.g. ".../output/..." -> "output").
 2. Extension dictionary: used as a fallback if no path keyword matched.
 
+Exception: an extension entry can be marked with "override_path": true -
+in that case, the extension's file_type always wins, even if a path
+keyword would otherwise have matched. Useful when a specific file type
+(e.g. .csv -> data_product) must never be reclassified just because it
+happens to sit in a folder named "output" or "input".
+
 If neither the path nor the extension yields a match, the user is asked
 interactively whether to add the extension to the extension dictionary -
 if confirmed, the entry is saved immediately and becomes known
@@ -24,6 +30,11 @@ DEFAULT_PATH_MAP_FILE = "file_type_path_map.json"
 # Initial seed values for the extension-based dictionary, used only to
 # create the file if it doesn't exist yet. Can be extended at any time,
 # either manually or interactively (see get_file_type below).
+#
+# Two accepted forms per entry:
+#   "ext": "type"                                  (short form)
+#   "ext": {"type": "type", "override_path": true}  (long form - always
+#                                                     wins over a path match)
 DEFAULT_TYPE_MAP = {
     "par": "input",
     "yaml": "input",
@@ -80,6 +91,17 @@ def save_path_type_map(path_type_map: dict, map_file: str = DEFAULT_PATH_MAP_FIL
         f.write("\n")
 
 
+def _normalize_type_entry(entry) -> tuple[str, bool]:
+    """
+    Normalizes a file_type_map entry into (type_value, override_path).
+    Accepts both the short form (plain string, override_path=False) and
+    the long form ({"type": ..., "override_path": true/false}).
+    """
+    if isinstance(entry, dict):
+        return entry.get("type", ""), bool(entry.get("override_path", False))
+    return entry, False
+
+
 def get_file_type_by_path(item_path: str, path_type_map: dict) -> str | None:
     """
     Checks whether any keyword from path_type_map appears anywhere in
@@ -115,13 +137,16 @@ def get_file_type(
     """
     Returns the file_type for a file, checked in this order:
 
+    0. Extension dictionary, but ONLY if that extension is marked with
+       "override_path": true - in that case it wins immediately, even
+       over a matching path keyword.
     1. Path keywords (if item_path is given): e.g. "output" anywhere in
        the file's FOLDER path -> "output". item_path should be the folder
        path only, excluding the file name itself (see get_file_type_by_path
        for why). No interactive prompt if nothing matches here, since most
        paths simply won't contain any of the configured keywords.
-    2. File extension dictionary: e.g. ".par" -> "input".
-       If the extension is not found either, the user is asked
+    2. Extension dictionary (normal, non-override case): e.g. ".par" -> "input".
+       If the extension is not found at all, the user is asked
        interactively (via console) whether to add it; if confirmed, it is
        saved immediately to map_file.
 
@@ -130,24 +155,37 @@ def get_file_type(
     the files - newly added entries then immediately apply to subsequent
     files within the same run.
     """
+    owns_type_map = type_map is None
+    if owns_type_map:
+        type_map = load_type_map(map_file)
+
     if path_type_map is None:
         path_type_map = load_path_type_map(path_map_file)
 
+    extension = file_name.split(".")[-1].lower()
+
+    # 0. Extension override - checked first, on purpose, before the path.
+    # Printed explicitly so it's always visible in the log which rule
+    # decided the file_type (helpful when several people maintain the
+    # same shared file_type_map.json).
+    if extension in type_map:
+        ext_value, ext_override = _normalize_type_entry(type_map[extension])
+        if ext_override:
+            print(f"[file_type] '.{extension}' has override_path=true -> using '{ext_value}' (ignoring path)")
+            return ext_value
+
+    # 1. Path keywords
     if item_path is not None:
         path_match = get_file_type_by_path(item_path, path_type_map)
         if path_match is not None:
             return path_match
 
-    owns_map = type_map is None
-    if owns_map:
-        type_map = load_type_map(map_file)
-
-    extension = file_name.split(".")[-1].lower()
-
+    # 2. Extension dictionary (normal case, already loaded above)
     if extension in type_map:
-        return type_map[extension]
+        ext_value, _ = _normalize_type_entry(type_map[extension])
+        return ext_value
 
-    # Not found -> ask interactively
+    # Not found anywhere -> ask interactively
     print(f"\nUnknown file extension: '.{extension}' (file: {file_name})")
     answer = input(f"Add '.{extension}' to the file_type dictionary? [y/n]: ").strip().lower()
 

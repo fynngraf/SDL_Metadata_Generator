@@ -87,14 +87,28 @@ def generate_authors_str(authors: list) -> str:
 # generate experiment.json.j2 from exp.meta.json
 def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
 
+    # Fields with dedicated handling elsewhere (author -> resolved authors_str,
+    # version -> placed inside "versions[0]"). Any OTHER key present in
+    # exp.meta.json is passed through automatically as an additional
+    # top-level property (e.g. "keywords", "sdl_dir", ...).
+    reserved_keys = {"name", "description", "author", "version"}
+    extra_lines = []
+    for key, value in meta.items():
+        if key in reserved_keys:
+            continue
+        # json.dumps handles quoting/escaping correctly for strings, lists,
+        # numbers, dicts, etc. - safer than manual string concatenation.
+        extra_lines.append(f'    {json.dumps(key)}: {json.dumps(value)},')
+    extra_fields_str = ("\n".join(extra_lines) + "\n") if extra_lines else ""
+
     template = """\
 {
-    "name":        \"""" + meta['name'] + """\",
-    "description": \"""" + meta['description'] + """\",
-    "authors":     [ """ + authors_str + """ ],
+    "name":        """ + json.dumps(meta['name']) + """,
+    "description": """ + json.dumps(meta['description']) + """,
+""" + extra_fields_str + """    "authors":     [ """ + authors_str + """ ],
     "versions":    [
         {
-            "version":     \"""" + meta['version'] + """\",
+            "version":     """ + json.dumps(meta['version']) + """,
             "simulations": [ {{ all_simulations }} ],
             "datasets":    [ {{ all_datasets }} ]
         }
