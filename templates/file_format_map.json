@@ -1,0 +1,13 @@
+{
+    "bin": "BIN",
+    "csv": "CSV",
+    "err": "ERR",
+    "h5": "HDF5",
+    "md": "MD",
+    "out": "OUT",
+    "par": "PAR",
+    "sh": "SH",
+    "txt": "TXT",
+    "xdmf": "XDMF",
+    "yaml": "YAML"
+}

@@ -1,0 +1,16 @@
+{
+    "bin": "output",
+    "csv": {
+        "type": "product",
+        "override_path": true
+    },
+    "err": "output",
+    "h5": "output",
+    "md": "input",
+    "out": "output",
+    "par": "input",
+    "sh": "input",
+    "txt": "input",
+    "xdmf": "output",
+    "yaml": "input"
+}
