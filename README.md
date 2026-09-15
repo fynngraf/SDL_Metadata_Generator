@@ -70,6 +70,8 @@ python main.py --path=../sdl_data --name_dir=sdl_exp_NewExperiment --output_file
 A ready-to-copy template for the README's yaml block is provided
 separately (`example_README.md`).
 
+The README file must have one of the following three names: README, README.txt, or README.md.
+
 ### README yaml block format
 
 ```yaml

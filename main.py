@@ -170,7 +170,7 @@ def main():
     readme_descriptions = extract_descriptions(readme_data)
 
     required_fields = {"name", "description", "author", "version"}
-    missing_fields = required_fields - meta.keys()
+    missing_fields = {f for f in required_fields if not meta.get(f)}
     if missing_fields:
         raise ValueError(
             f"README yaml block in {readme_path} is missing required field(s): "
