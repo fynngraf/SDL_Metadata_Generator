@@ -5,7 +5,7 @@
     "h5": "HDF5",
     "md": "MD",
     "out": "OUT",
-    "par": "PAR",
+    "par": "YAML",
     "sh": "SH",
     "txt": "TXT",
     "xdmf": "XDMF",
