@@ -1,8 +1,0 @@
-{
-  "name": "TA_FFM-Tohoku",
-  "description": "Geo-INQUIRE TA Project FFM-Tohoku (C3-TA2-541-11-3). Mesh and results for five different rupture models. The five models used are described in the README file and generated with SeisSol on Leonardo@CINECA. Related publication: `Dynamic Viability of Finite-Fault Slip Models with Ensemble Kalman Inversion by Wong et al.",
-  "author": ["39","139","36","82"],
-  "version": "1.0.0",
-  "keywords": ["seissol", "geo-inquire", "ta", "ffm-tohoku"],
-  "projects":[{"id":18,"isFunding":true}]
-}

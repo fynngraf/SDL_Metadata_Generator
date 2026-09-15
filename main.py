@@ -12,27 +12,12 @@ from file_type_lookup import (
     DEFAULT_PATH_MAP_FILE as DEFAULT_TYPE_PATH_MAP_FILE,
 )
 from readme_description_lookup import (
-    load_readme_descriptions,
+    load_readme_yaml,
+    extract_meta,
+    extract_descriptions,
     get_simulation_description,
     get_dataset_description,
 )
-
-
-# load metadata
-def load_exp_meta(exp_path: Path) -> dict:
-    # complete path
-    meta_file = exp_path / "exp.meta.json"
-
-    if not meta_file.exists():
-        print(f"Metadata file does not exist: {meta_file} - use default")
-        return {
-            "name": exp_path.name,
-            "author": [],
-            "version": "unknown",
-            "description": ""
-        }
-    with open(meta_file, 'r') as _:   # encoding='utf-8'
-        return json.load(_)
 
 
 # load author database
@@ -84,13 +69,13 @@ def generate_authors_str(authors: list) -> str:
     return ", ".join(authors_list)
 
 
-# generate experiment.json.j2 from exp.meta.json
+# generate experiment.json.j2 from the README's meta fields
 def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
 
     # Fields with dedicated handling elsewhere (author -> resolved authors_str,
-    # version -> placed inside "versions[0]"). Any OTHER key present in
-    # exp.meta.json is passed through automatically as an additional
-    # top-level property (e.g. "keywords", "sdl_dir", ...).
+    # version -> placed inside "versions[0]"). Any OTHER key present in the
+    # README's yaml block is passed through automatically as an additional
+    # top-level property (e.g. "keywords", "path", ...).
     reserved_keys = {"name", "description", "author", "version"}
     extra_lines = []
     for key, value in meta.items():
@@ -166,8 +151,31 @@ def main():
     if not input_path.exists():
         raise FileNotFoundError(f"Input path does not exist: {input_path}")
 
-    # read exp.meta.json from templates/sdl_exp_xyz/
-    meta = load_exp_meta(Path(args.templates_dir) / exp_id)
+    # The README (in the raw experiment data directory, i.e. input_path) is
+    # now the single source for both the experiment's metadata (name,
+    # description, author, version, ...) and its description assignments -
+    # both are read from the same embedded yaml block. Both "README" and
+    # "README.txt"/"README.md" are accepted.
+    readme_candidates = [input_path / "README", input_path / "README.txt", input_path / "README.md"]
+    readme_path = next((p for p in readme_candidates if p.exists()), None)
+    if readme_path is None:
+        raise FileNotFoundError(
+            f"No README/README.txt/README.md found in {input_path} - a README "
+            f"with a yaml block (name, description, author, version, ...) is required"
+        )
+
+    print(f"Reading experiment metadata and descriptions from: {readme_path}")
+    readme_data = load_readme_yaml(str(readme_path))
+    meta = extract_meta(readme_data)
+    readme_descriptions = extract_descriptions(readme_data)
+
+    required_fields = {"name", "description", "author", "version"}
+    missing_fields = required_fields - meta.keys()
+    if missing_fields:
+        raise ValueError(
+            f"README yaml block in {readme_path} is missing required field(s): "
+            f"{', '.join(sorted(missing_fields))}"
+        )
     print(f'metadata : {meta}')
 
     # load author database
@@ -179,6 +187,20 @@ def main():
 
     # generate authors string for template
     authors_str = generate_authors_str(authors)
+
+    # Ask whether the README file itself should also become a dataset entry
+    # in metadata.json, or whether it was only placed in the experiment
+    # folder to supply metadata/description assignments and should
+    # therefore be excluded from the generated output.
+    answer = input(
+        f"\nShould metadata also be generated for the README file itself "
+        f"({readme_path.name})? [y/n]: "
+    ).strip().lower()
+    include_readme_as_dataset = answer in ("y", "yes", "j", "ja")
+    if include_readme_as_dataset:
+        print(f"-> {readme_path.name} will be included as a dataset entry.\n")
+    else:
+        print(f"-> {readme_path.name} will be excluded from the generated metadata.json.\n")
 
     # Load the file_format dictionary once (stored centrally in templates_dir,
     # shared across all experiments, similar to authors.json). It is passed
@@ -199,35 +221,6 @@ def main():
     type_path_map_file = str(Path(args.templates_dir) / DEFAULT_TYPE_PATH_MAP_FILE)
     type_path_map = load_path_type_map(type_path_map_file)
 
-    # Load description assignments from the README's embedded yaml block.
-    # The README lives alongside the raw experiment data (input_path), not
-    # in templates_dir, since it is authored by the experiment's authors
-    # together with the data itself. Both "README" and "README.txt" are
-    # accepted.
-    readme_candidates = [input_path / "README", input_path / "README.txt", input_path / "README.md"]
-    readme_path = next((p for p in readme_candidates if p.exists()), None)
-    if readme_path:
-        print(f"Reading descriptions from: {readme_path}")
-        readme_descriptions = load_readme_descriptions(str(readme_path))
-
-        # Ask whether the README file itself should also become a dataset
-        # entry in metadata.json, or whether it was only placed in the
-        # experiment folder to supply description assignments and should
-        # therefore be excluded from the generated output.
-        answer = input(
-            f"\nShould metadata also be generated for the README file itself "
-            f"({readme_path.name})? [y/n]: "
-        ).strip().lower()
-        include_readme_as_dataset = answer in ("y", "yes", "j", "ja")
-        if include_readme_as_dataset:
-            print(f"-> {readme_path.name} will be included as a dataset entry.\n")
-        else:
-            print(f"-> {readme_path.name} will be excluded from the generated metadata.json.\n")
-    else:
-        print("No README/README.txt/README.md found in input path - using generic fallback descriptions")
-        readme_descriptions = {"folders": {}, "extensions": {}, "folders_fallback": {}}
-        include_readme_as_dataset = True  # irrelevant, there is no README file to exclude anyway
-
     # set Jinja2 Environment
     env = Environment(loader=FileSystemLoader(args.templates_dir))
 
@@ -235,7 +228,7 @@ def main():
     templ_s_r = env.get_template('simulation.json.j2')
     templ_d_s = env.get_template('dataset.json.j2')
 
-    # generate experiment.json.j2 from exp.meta.json dynamically
+    # generate experiment.json.j2 from the README's meta fields
     templ_exp = generate_exp_template(env, meta, authors_str, args.templates_dir, exp_id)
 
     # write general information to metadata.json
@@ -250,7 +243,7 @@ def main():
     # simulation if datasetPaths is left empty).
     dataset_paths_by_top_level = {}
     for item in all_items:
-        if item.name in ("exp.meta.json", args.output_file):
+        if item.name == args.output_file:
             continue
         if readme_path is not None and item == readme_path and not include_readme_as_dataset:
             continue
@@ -264,12 +257,12 @@ def main():
     # Phase 2: generate simulations and datasets as before, now with the
     # datasetPaths list filled in for each simulation entry.
     for item in all_items:
-        # skip exp.meta.json and output file
-        if item.name in ("exp.meta.json", args.output_file):
+        # skip the output file
+        if item.name == args.output_file:
             continue
 
         # skip the README file itself if the user chose not to include it
-        # as a dataset entry (it was only used to supply descriptions)
+        # as a dataset entry (it was only used to supply metadata/descriptions)
         if readme_path is not None and item == readme_path and not include_readme_as_dataset:
             continue
 

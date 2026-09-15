@@ -1,14 +1,21 @@
 """
 readme_description_lookup.py
 
-Extracts "description" assignments from a YAML block embedded in an
-experiment's README file, and provides lookup functions to determine the
-description for a given folder (simulation) or file (dataset).
+Parses a single YAML block embedded in an experiment's README file. That
+block is the sole source of both the experiment's metadata (name,
+description, author, version, and any additional pass-through fields such
+as "path") and the description assignments for its simulations/datasets.
 
 The README stays a normal, freely readable text/markdown file for humans.
 Only a single fenced ```yaml ... ``` block within it is parsed by this
 script. Expected structure of that block:
 
+    name: <experiment name>
+    description: <experiment description>
+    author: [<author id>, <author id>, ...]
+    version: <experiment version>
+    path: <optional pass-through field, e.g. relative sdl path>
+    ...                       # any other pass-through field
     folders:
       <folder_name>: <description, optionally containing {folder}>
       ...
@@ -22,6 +29,10 @@ script. Expected structure of that block:
     folders_fallback:
       <folder_name>: <description>
       ...
+
+"folders", "extensions" and "folders_fallback" are reserved for dataset/
+simulation descriptions; every other top-level key is treated as
+experiment metadata and passed through into metadata.json.
 
 Normal priority (matches by exact folder name first, then file extension):
 1. "folders"            - exact immediate parent folder name
@@ -43,59 +54,53 @@ import yaml
 from pathlib import Path
 
 YAML_BLOCK_PATTERN = re.compile(r"```yaml\s*\n(.*?)```", re.DOTALL)
+DESCRIPTION_KEYS = {"folders", "extensions", "folders_fallback"}
 
 
-def load_readme_descriptions(readme_path: str) -> dict:
+def load_readme_yaml(readme_path: str) -> dict:
     """
-    Reads the README file at readme_path, extracts the first fenced
-    ```yaml ... ``` block, and parses it into a dict with the keys
-    "folders", "extensions", "folders_fallback" (missing keys default to
-    an empty dict).
-
-    Prints a clear status message in every case, so it is always visible
-    in the log whether descriptions were successfully loaded from the
-    README, or whether generic fallback descriptions will be used instead
-    (and why).
+    Reads the README file at readme_path and returns the parsed content of
+    its first fenced ```yaml ... ``` block (raw dict, meta fields and
+    description keys mixed together). Raises FileNotFoundError / ValueError
+    if the README, the yaml block, or the parsed content is invalid - the
+    README is now the only source of experiment metadata, so there is no
+    generic fallback to silently continue with.
     """
     path = Path(readme_path)
-    empty = {"folders": {}, "extensions": {}, "folders_fallback": {}}
-
     if not path.exists():
-        print(f"[README] File not found: {readme_path} - using generic fallback descriptions")
-        return empty
+        raise FileNotFoundError(f"README not found: {readme_path}")
 
     text = path.read_text(encoding="utf-8")
     match = YAML_BLOCK_PATTERN.search(text)
-
     if not match:
-        print(f"[README] No ```yaml block found in {readme_path} - using generic fallback descriptions")
-        return empty
+        raise ValueError(f"No ```yaml block found in {readme_path}")
 
     try:
         data = yaml.safe_load(match.group(1)) or {}
     except yaml.YAMLError as e:
-        print(f"[README] ERROR: Could not parse yaml block in {readme_path} - using generic fallback descriptions")
-        print(f"[README]   Reason: {e}")
-        return empty
+        raise ValueError(f"Could not parse yaml block in {readme_path}: {e}")
 
     if not isinstance(data, dict):
-        print(
-            f"[README] ERROR: yaml block in {readme_path} did not parse into a mapping "
-            f"(got {type(data).__name__}) - using generic fallback descriptions"
+        raise ValueError(
+            f"yaml block in {readme_path} did not parse into a mapping "
+            f"(got {type(data).__name__})"
         )
-        return empty
 
-    data.setdefault("folders", {})
-    data.setdefault("extensions", {})
-    data.setdefault("folders_fallback", {})
-
-    print(
-        f"[README] Successfully loaded descriptions from {readme_path}: "
-        f"{len(data['folders'])} folders, "
-        f"{len(data['extensions'])} extensions, "
-        f"{len(data['folders_fallback'])} folders_fallback entries"
-    )
     return data
+
+
+def extract_meta(data: dict) -> dict:
+    """Everything in the yaml block except the reserved description keys is experiment metadata."""
+    return {k: v for k, v in data.items() if k not in DESCRIPTION_KEYS}
+
+
+def extract_descriptions(data: dict) -> dict:
+    """The reserved description keys, defaulting missing ones to empty dicts."""
+    return {
+        "folders": data.get("folders", {}) or {},
+        "extensions": data.get("extensions", {}) or {},
+        "folders_fallback": data.get("folders_fallback", {}) or {},
+    }
 
 
 def _apply_placeholder(text: str, top_level_name: str | None) -> str:
@@ -141,24 +146,19 @@ def get_dataset_description(
     """
     extension = "." + file_name.split(".")[-1].lower()
 
-    # 0. Priority extension override - checked first, on purpose, before folders
     if extension in descriptions["extensions"]:
         ext_desc, is_priority = _normalize_extension_entry(descriptions["extensions"][extension])
         if is_priority:
             return _apply_placeholder(ext_desc, top_level_name)
 
-    # 1. Folder match (normal case)
     if folder_name in descriptions["folders"]:
         return _apply_placeholder(descriptions["folders"][folder_name], top_level_name)
 
-    # 2. Extension match (non-priority, already looked up above if present)
     if extension in descriptions["extensions"]:
         ext_desc, _ = _normalize_extension_entry(descriptions["extensions"][extension])
         return _apply_placeholder(ext_desc, top_level_name)
 
-    # 3. Folder fallback
     if folder_name in descriptions["folders_fallback"]:
         return _apply_placeholder(descriptions["folders_fallback"][folder_name], top_level_name)
 
-    # 4. Generic fallback
     return f"Description of {file_name}"
