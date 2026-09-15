@@ -1,7 +1,0 @@
-{
-  "name": "RADIATE_TEST",
-  "description": "for Debugging only",
-  "author": ["36"],
-  "version": "1.0.1",
-  "sdl_dir": "../...."
-}

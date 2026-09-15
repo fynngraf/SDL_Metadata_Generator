@@ -1,7 +1,0 @@
-{
-  "name": "TA_RADIATE",
-  "description": "Geo-INQUIRE TA Project RADIATE (C1-TA2-531-1-1). Meshes and results for 8 seeds (lambdaMin0.4, lambdaMax20, alpha2.10), generated with SeisSol on Leonardo@CINECA.",
-  "author": ["77", "81", "82", "36"],
-  "version": "1.0.0",
-  "sdl_dir": "../..."
-}

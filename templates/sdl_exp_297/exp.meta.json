@@ -1,7 +1,0 @@
-{
-  "name": "CyberSISZ",
-  "description": "Project to adapt CyberShake to the Southwest Iceland Seismic Zone (SISZ) and Reykjanes Peninsula Oblique Rift (RPOR) by adjusting the CyberShake fault rupture generator so that near-fault synthetic motions better reproduce the observations.",
-  "author": ["76", "78", "75", "82", "36"],
-  "version": "1.0.0",
-  "sdl_dir": "../..."
-}

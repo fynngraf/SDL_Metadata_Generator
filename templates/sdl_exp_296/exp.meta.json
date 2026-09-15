@@ -1,7 +1,0 @@
-{
-  "name": "RADIATE",
-  "description": "Geo-INQUIRE TA Project RADIATE. Examples for lambdaMin0.4, lambdaMax20, alpha2.10.",
-  "author": ["77", "36"],
-  "version": "1.0.0",
-  "sdl_dir": "../..."
-}

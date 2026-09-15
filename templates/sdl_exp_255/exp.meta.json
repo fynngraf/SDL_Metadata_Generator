@@ -1,7 +1,0 @@
-{
-  "name": "AltoTiberina 100 runs incl. input files",
-  "description": "Description of sdl_100runs",
-  "author": ["36", "37"],
-  "version": "1.0.0",
-  "sdl_dir": "../..."
-}

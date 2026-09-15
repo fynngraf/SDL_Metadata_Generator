@@ -1,7 +1,0 @@
-{
-  "name": "TA_CapCosSC-HPC",
-  "description": "Geo-INQUIRE TA Project CapCosSC-HPC (C2-TA2-531-1-2, Elizabeth Madden, San José State University). Result datasets for a suite of megathrust earthquake scenarios based on the 2004 Sumatra-Andaman earthquake. Initial conditions for these scenarios vary in the amount of pore fluid pressure and how it is distributed with depth, the relative magnitudes of the principal stresses, and initial stress heterogeneity. As a result, the modeled earthquakes vary in magnitude, average stress drop magnitude, the distribution of stress drop along the main fault, and locations of peak slip and slip rate. Generated with SeisSol on Leonardo@CINECA.",
-  "author": ["68", "81", "36", "82"],
-  "version": "1.0.0",
-  "sdl_dir": "../..."
-}
