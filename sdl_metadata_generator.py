@@ -157,9 +157,7 @@ def main():
         log_file.parent.mkdir(parents=True, exist_ok=True)
         handlers.append(logging.FileHandler(log_file, mode="w"))
 
-    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format="%(levelname)s: %(message)s")
-    handlers=handlers
-
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format="%(levelname)s: %(message)s", handlers=handlers)
 
     output_filename = args.output_file or f"{exp_id}_metadata.json"         # e.g. "sdl_exp_309_metadata.json"
     output_file = Path("metadata") / output_filename                        # e.g. ./metadata/sdl_exp_309_metadata.json
