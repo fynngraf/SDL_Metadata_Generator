@@ -48,4 +48,4 @@ extensions:
 - **New experiment:** SDL → Create → Experiment Bulk → select `metadata.json` → then upload data via Upload.
 - **Update existing:** re-run the generator → re-import via Edit Bulk.
 
-Full details: see `README.md`.
+Full details: see `README_extended.md`.

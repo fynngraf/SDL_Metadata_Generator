@@ -70,7 +70,7 @@ def generate_authors_str(authors: list) -> str:
 
 
 # generate experiment.json.j2 from the README's meta fields
-def generate_exp_template(env: Environment, meta: dict, authors_str: str, templates_dir: str, exp_id: str):
+def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id: str):
 
     # Fields with dedicated handling elsewhere (author -> resolved authors_str,
     # version -> placed inside "versions[0]"). Any OTHER key present in the
@@ -100,8 +100,8 @@ def generate_exp_template(env: Environment, meta: dict, authors_str: str, templa
     ]
 }
 """
-    # save experiment.json.j2
-    template_path = Path(templates_dir) / exp_id / "experiment.json.j2"
+    # save experiment.json.j2 as an intermediate artifact for debugging
+    template_path = Path("logs") / f"{exp_id}_experiment.json.j2"
     template_path.parent.mkdir(parents=True, exist_ok=True)
     with open(template_path, "w") as f:
         f.write(template)
@@ -122,8 +122,8 @@ def parse_args():
     )
     parser.add_argument(
         "--output_file",
-        default="metadata.json",
-        help="Name of the output file"
+        default=None,
+        help="Name of the output file (default: <exp_id>_metadata.json)"
     )
     parser.add_argument(
         "--templates_dir",
@@ -138,7 +138,9 @@ def main():
 
     input_path = Path(args.path)                                            # e.g. ../sdl_data/sdl_exp_309
     exp_id = input_path.name                                                # e.g. "sdl_exp_309"
-    output_file = Path(args.templates_dir) / exp_id / args.output_file      # e.g. ./templates/sdl_exp_309/metadata.json
+    output_filename = args.output_file or f"{exp_id}_metadata.json"         # e.g. "sdl_exp_309_metadata.json"
+    output_file = Path("metadata") / output_filename                        # e.g. ./metadata/sdl_exp_309_metadata.json
+
 
     print(f'Experiment : {exp_id}')
     print(f'Input Path : {input_path}')
@@ -147,18 +149,19 @@ def main():
     if not input_path.exists():
         raise FileNotFoundError(f"Input path does not exist: {input_path}")
 
-    # The README (in the raw experiment data directory, i.e. input_path) is
-    # now the single source for both the experiment's metadata (name,
+    if output_file.exists():
+        answer = input(f"\nOutput file already exists: {output_file}\nOverwrite? [y/n]: ").strip().lower()
+        if answer not in ["y", "yes", "j", "ja"]:
+            print("Aborted - output file already exists and overwrite was declined")
+            return
+
+    # The README.md (in the raw experiment data directory, i.e. input_path)
+    # is now the single source for both the experiment's metadata (name,
     # description, author, version, ...) and its description assignments -
-    # both are read from the same embedded yaml block. Both "README" and
-    # "README.txt"/"README.md" are accepted.
-    readme_candidates = [input_path / "README", input_path / "README.txt", input_path / "README.md"]
-    readme_path = next((p for p in readme_candidates if p.exists()), None)
-    if readme_path is None:
-        raise FileNotFoundError(
-            f"No README/README.txt/README.md found in {input_path} - a README "
-            f"with a yaml block (name, description, author, version, ...) is required"
-        )
+    # both are read from the same embedded yaml block.
+    readme_path = input_path / "README.md"
+    if not readme_path.exists():
+        raise FileNotFoundError(f"No README.md found in {input_path} - a README with a yaml " f"block (name, description, author, version, ...) is required")
 
     print(f"Reading experiment metadata and descriptions from: {readme_path}")
     readme_data = load_readme_yaml(str(readme_path))
@@ -216,7 +219,7 @@ def main():
     templ_d_s = env.get_template('dataset.json.j2')
 
     # generate experiment.json.j2 from the README's meta fields
-    templ_exp = generate_exp_template(env, meta, authors_str, args.templates_dir, exp_id)
+    templ_exp = generate_exp_template(env, meta, authors_str, exp_id)
 
     # write general information to metadata.json
     all_s_r = ""
@@ -230,7 +233,7 @@ def main():
     # simulation if datasetPaths is left empty).
     dataset_paths_by_top_level = {}
     for item in all_items:
-        if item.name == args.output_file:
+        if item.name == output_filename:
             continue
         if readme_path is not None and item == readme_path and not include_readme_as_dataset:
             continue
@@ -245,7 +248,7 @@ def main():
     # datasetPaths list filled in for each simulation entry.
     for item in all_items:
         # skip the output file
-        if item.name == args.output_file:
+        if item.name == output_filename:
             continue
 
         # skip the README file itself if the user chose not to include it
@@ -330,6 +333,7 @@ def main():
             )
 
     # write metadata.json
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w") as f:
         f.write(templ_exp.render(
             **meta,
