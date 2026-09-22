@@ -9,9 +9,12 @@ automatically from then on (including future runs).
 """
 
 import json
+import logging
 from pathlib import Path
 
 DEFAULT_MAP_FILE = "file_format_map.json"
+
+logger = logging.getLogger(__name__)
 
 # Initial seed values, used only to create the file if it doesn't exist yet.
 # Can be extended at any time, either manually or interactively (see
@@ -65,17 +68,17 @@ def get_file_format(file_name: str, map_file: str = DEFAULT_MAP_FILE, format_map
         return format_map[extension]
 
     # Not found -> ask interactively
-    print(f"\nUnknown file extension: '.{extension}' (file: {file_name})")
+    logger.warning(f"Unknown file extension: '.{extension}' (file: {file_name})")
     answer = input(f"Add '.{extension}' to the file_format dictionary? [y/n]: ").strip().lower()
 
     if answer in ("y", "yes", "j", "ja"):
         value = input(f"Which file_format should be set for '.{extension}'? (e.g. PAR): ").strip()
         format_map[extension] = value
         save_format_map(format_map, map_file)
-        print(f"'.{extension}' -> '{value}' has been saved to {map_file}\n")
+        logger.info(f"'.{extension}' -> '{value}' has been saved to {map_file}")
         return value
 
     # Declined: one-off fallback without saving (uppercased extension)
     fallback = extension.upper()
-    print(f"Not saved. Using one-off fallback: '{fallback}'\n")
+    logger.warning(f"Not saved. Using one-off fallback: '{fallback}'")
     return fallback

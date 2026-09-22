@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 #import numpy as np
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -18,14 +19,14 @@ from readme_description_lookup import (
     get_simulation_description,
     get_dataset_description,
 )
-
+logger = logging.getLogger(__name__)
 
 # load author database
 def load_authors(templates_dir: str) -> dict:
     authors_file = Path(templates_dir) / "authors.json"
 
     if not authors_file.exists():
-        print(f"Authors file does not exist: {authors_file}")
+        logger.warning(f"Authors file does not exist: {authors_file}")
         return {}
 
     with open(authors_file, 'r') as _:   # encoding='utf-8'
@@ -43,7 +44,7 @@ def resolve_authors(author_ids, authors_db: dict) -> list:
         if author_id in authors_db:
             resolved.append(authors_db[author_id])
         else:
-            print(f"[WARN] Author ID '{author_id}' not found in authors.json - skipping")
+            logger.warning(f"Author ID {author_id} not found in authors.json - skipping")
 
     return resolved
 
@@ -70,7 +71,7 @@ def generate_authors_str(authors: list) -> str:
 
 
 # generate experiment.json.j2 from the README's meta fields
-def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id: str):
+def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id: str, debug: bool):
 
     # Fields with dedicated handling elsewhere (author -> resolved authors_str,
     # version -> placed inside "versions[0]"). Any OTHER key present in the
@@ -100,11 +101,14 @@ def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id
     ]
 }
 """
-    # save experiment.json.j2 as an intermediate artifact for debugging
-    template_path = Path("logs") / f"{exp_id}_experiment.json.j2"
-    template_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(template_path, "w") as f:
-        f.write(template)
+    # save experiment.json.j2 as an intermediate artifact for debugging,
+    # only when explicitly requested via --debug
+    if debug:
+        template_path = Path("logs") / f"{exp_id}_experiment.json.j2"
+        template_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(template_path, 'w') as f:
+            f.write(template)
+        logger.debug(f"Wrote intermediate template to: {template_path}")
 
     templ = env.from_string(template)
     return templ
@@ -130,21 +134,40 @@ def parse_args():
         default="./templates",
         help="Path to the templates directory"
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable verbose debug logging"
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
+    #logger.debug("This is a debug message")
+    #logger.info("This is an info message")
+
     input_path = Path(args.path)                                            # e.g. ../sdl_data/sdl_exp_309
     exp_id = input_path.name                                                # e.g. "sdl_exp_309"
+
+    handlers = [logging.StreamHandler()]
+    if args.debug:
+        log_file = Path("logs") / f"{exp_id}_run.log"
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        handlers.append(logging.FileHandler(log_file, mode="w"))
+
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format="%(levelname)s: %(message)s")
+    handlers=handlers
+
+
     output_filename = args.output_file or f"{exp_id}_metadata.json"         # e.g. "sdl_exp_309_metadata.json"
     output_file = Path("metadata") / output_filename                        # e.g. ./metadata/sdl_exp_309_metadata.json
 
 
-    print(f'Experiment : {exp_id}')
-    print(f'Input Path : {input_path}')
-    print(f'Output File : {output_file}')
+    logger.info(f'Experiment : {exp_id}')
+    logger.info(f'Input Path : {input_path}')
+    logger.info(f'Output File : {output_file}')
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input path does not exist: {input_path}")
@@ -152,7 +175,7 @@ def main():
     if output_file.exists():
         answer = input(f"\nOutput file already exists: {output_file}\nOverwrite? [y/n]: ").strip().lower()
         if answer not in ["y", "yes", "j", "ja"]:
-            print("Aborted - output file already exists and overwrite was declined")
+            logger.warning("Aborted - output file already exists and overwrite was declined")
             return
 
     # The README.md (in the raw experiment data directory, i.e. input_path)
@@ -163,7 +186,7 @@ def main():
     if not readme_path.exists():
         raise FileNotFoundError(f"No README.md found in {input_path} - a README with a yaml " f"block (name, description, author, version, ...) is required")
 
-    print(f"Reading experiment metadata and descriptions from: {readme_path}")
+    logger.info(f"Reading experiment metadata and descriptions from: {readme_path}")
     readme_data = load_readme_yaml(str(readme_path))
     meta = extract_meta(readme_data)
     readme_descriptions = extract_descriptions(readme_data)
@@ -175,14 +198,14 @@ def main():
             f"README yaml block in {readme_path} is missing required field(s): "
             f"{', '.join(sorted(missing_fields))}"
         )
-    print(f'metadata : {meta}')
+    logger.debug(f'metadata : {meta}')
 
     # load author database
     authors_db = load_authors(args.templates_dir)
 
     # resolve author IDs to full author info
     authors = resolve_authors(meta['author'], authors_db)
-    print(f'authors : {authors}')
+    logger.debug(f'authors : {authors}')
 
     # generate authors string for template
     authors_str = generate_authors_str(authors)
@@ -219,7 +242,7 @@ def main():
     templ_d_s = env.get_template('dataset.json.j2')
 
     # generate experiment.json.j2 from the README's meta fields
-    templ_exp = generate_exp_template(env, meta, authors_str, exp_id)
+    templ_exp = generate_exp_template(env, meta, authors_str, exp_id, args.debug)
 
     # write general information to metadata.json
     all_s_r = ""
@@ -268,7 +291,7 @@ def main():
             if len(rel_dir_parts) > 1:
                 continue
 
-            print(f"Generate simulation for: {item.name}")
+            logger.debug(f"Generate simulation for: {item.name}")
             if all_s_r:
                 all_s_r += ","
 
@@ -288,7 +311,7 @@ def main():
 
         # for all files add a dataset
         elif item.is_file():
-            print(f"Generate dataset for: {item.name}")
+            logger.debug(f"Generate dataset for: {item.name}")
             prefix = item.parent.name
             file_name = item.name
 
@@ -340,7 +363,7 @@ def main():
             all_simulations=all_s_r,
             all_datasets=all_d_s)
         )
-    print(f"\nfinished, metadata written to: {output_file}")
+    logger.info(f"finished, metadata written to: {output_file}")
 
 
 if __name__ == '__main__':

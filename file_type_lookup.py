@@ -22,10 +22,13 @@ automatically from then on (including future runs).
 """
 
 import json
+import logging
 from pathlib import Path
 
 DEFAULT_MAP_FILE = "file_type_map.json"
 DEFAULT_PATH_MAP_FILE = "file_type_path_map.json"
+
+logger = logging.getLogger(__name__)
 
 # Initial seed values for the extension-based dictionary, used only to
 # create the file if it doesn't exist yet. Can be extended at any time,
@@ -165,13 +168,13 @@ def get_file_type(
     extension = file_name.split(".")[-1].lower()
 
     # 0. Extension override - checked first, on purpose, before the path.
-    # Printed explicitly so it's always visible in the log which rule
+    # Logged at debug level (--debug) so it's traceable which rule
     # decided the file_type (helpful when several people maintain the
     # same shared file_type_map.json).
     if extension in type_map:
         ext_value, ext_override = _normalize_type_entry(type_map[extension])
         if ext_override:
-            print(f"[file_type] '.{extension}' has override_path=true -> using '{ext_value}' (ignoring path)")
+            logger.debug(f"'.{extension}' has override_path=true -> using '{ext_value}' (ignoring path)")
             return ext_value
 
     # 1. Path keywords
@@ -186,17 +189,17 @@ def get_file_type(
         return ext_value
 
     # Not found anywhere -> ask interactively
-    print(f"\nUnknown file extension: '.{extension}' (file: {file_name})")
+    logger.warning(f"Unknown file extension: '.{extension}' (file: {file_name})")
     answer = input(f"Add '.{extension}' to the file_type dictionary? [y/n]: ").strip().lower()
 
     if answer in ("y", "yes", "j", "ja"):
         value = input(f"Which file_type should be set for '.{extension}'? (e.g. input, output, data_product): ").strip()
         type_map[extension] = value
         save_type_map(type_map, map_file)
-        print(f"'.{extension}' -> '{value}' has been saved to {map_file}\n")
+        logger.info(f"'.{extension}' -> '{value}' has been saved to {map_file}\n")
         return value
 
     # Declined: one-off fallback without saving
     fallback = "output"
-    print(f"Not saved. Using one-off fallback: '{fallback}'\n")
+    logger.warning(f"Not saved. Using one-off fallback: '{fallback}'")
     return fallback
