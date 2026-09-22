@@ -196,7 +196,7 @@ def get_file_type(
         value = input(f"Which file_type should be set for '.{extension}'? (e.g. input, output, data_product): ").strip()
         type_map[extension] = value
         save_type_map(type_map, map_file)
-        logger.info(f"'.{extension}' -> '{value}' has been saved to {map_file}\n")
+        logger.info(f"'.{extension}' -> '{value}' has been saved to {map_file}")
         return value
 
     # Declined: one-off fallback without saving

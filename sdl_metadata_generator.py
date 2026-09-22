@@ -145,9 +145,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    #logger.debug("This is a debug message")
-    #logger.info("This is an info message")
-
     input_path = Path(args.path)                                            # e.g. ../sdl_data/sdl_exp_309
     exp_id = input_path.name                                                # e.g. "sdl_exp_309"
 
