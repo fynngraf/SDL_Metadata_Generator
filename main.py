@@ -117,12 +117,8 @@ def parse_args():
     parser.add_argument(
         "--path",
         default="./",
-        help="Path to the base directory of experiments"
-    )
-    parser.add_argument(
-        "--name_dir",
-        default="",
-        help="Name of the experiment"
+        help="Path to the experiment's data directory, e.g. ../sdl_data/sdl_exp_309. "
+             "The last path segment is used as the experiment name."
     )
     parser.add_argument(
         "--output_file",
@@ -140,8 +136,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    exp_id = args.name_dir                                                   # e.g. "sdl_exp_309"
-    input_path = Path(args.path) / exp_id                                    # e.g. ./sdl_exp_309
+    input_path = Path(args.path)                                            # e.g. ../sdl_data/sdl_exp_309
+    exp_id = input_path.name                                                # e.g. "sdl_exp_309"
     output_file = Path(args.templates_dir) / exp_id / args.output_file      # e.g. ./templates/sdl_exp_309/metadata.json
 
     print(f'Experiment : {exp_id}')
@@ -188,19 +184,10 @@ def main():
     # generate authors string for template
     authors_str = generate_authors_str(authors)
 
-    # Ask whether the README file itself should also become a dataset entry
-    # in metadata.json, or whether it was only placed in the experiment
-    # folder to supply metadata/description assignments and should
-    # therefore be excluded from the generated output.
-    answer = input(
-        f"\nShould metadata also be generated for the README file itself "
-        f"({readme_path.name})? [y/n]: "
-    ).strip().lower()
-    include_readme_as_dataset = answer in ("y", "yes", "j", "ja")
-    if include_readme_as_dataset:
-        print(f"-> {readme_path.name} will be included as a dataset entry.\n")
-    else:
-        print(f"-> {readme_path.name} will be excluded from the generated metadata.json.\n")
+    # The README is always included as a dataset entry - every experiment
+    # is expected to have one, and it's part of the data as far as SDL is
+    # concerned.
+    include_readme_as_dataset = True
 
     # Load the file_format dictionary once (stored centrally in templates_dir,
     # shared across all experiments, similar to authors.json). It is passed

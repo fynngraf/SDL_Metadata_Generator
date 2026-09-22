@@ -64,7 +64,7 @@ The raw experiment data (and its `README`) lives separately, wherever
 mkdir -p ../sdl_data/sdl_exp_NewExperiment
 # copy/generate the experiment's raw data into that folder
 vi ../sdl_data/sdl_exp_NewExperiment/README
-python main.py --path=../sdl_data --name_dir=sdl_exp_NewExperiment --output_file=metadata.json --templates_dir=./templates
+python main.py --path=../sdl_data/sdl_exp_NewExperiment --output_file=metadata.json --templates_dir=./templates
 ```
 
 A ready-to-copy template for the README's yaml block is provided
@@ -157,16 +157,15 @@ file's direct parent folder if it's nested deeper).
 
 None of the arguments are marked `required=True` in `argparse` — the
 script will technically start with just `python main.py`. In practice,
-though, `--name_dir` always needs to be set explicitly (its default is an
-empty string, which will immediately fail); the other three have usable
-defaults as long as you run the script from the repository root.
+though, `--path` always needs to be set explicitly (its default `./` only
+resolves to a meaningful experiment name by accident); the other two have
+usable defaults as long as you run the script from the repository root.
 
 | Argument           | Default            | Required in practice? | Description                                                                 |
 |---------------------|---------------------|--------------------------|-------------------------------------------------------------------------------|
-| `--name_dir`        | `""`                | **Yes** — always         | Name of the experiment (matches the folder name under both `--path` and `--templates_dir`). Empty default has no valid target, so the script fails if missing. |
-| `--path`            | `./`                | No, but usually set      | Base directory that contains the experiment's raw data (`<path>/<name_dir>`). Default only works if you run the script from inside that base directory itself. |
+| `--path`            | `./`                | **Yes** — always         | Path to the experiment's data directory, e.g. `../sdl_data/sdl_exp_309`. The last path segment is used as the experiment name (`exp_id`). |
 | `--templates_dir`   | `./templates`       | No                        | Path to the templates directory (holds `authors.json`, the shared maps, and every `sdl_exp_*` folder). Default matches this repo's layout — fine as-is when run from the repo root. |
-| `--output_file`     | `metadata.json`     | No                        | Name of the generated output file, written to `<templates_dir>/<name_dir>/<output_file>`. Default is usually fine. |
+| `--output_file`     | `metadata.json`     | No                        | Name of the generated output file, written to `<templates_dir>/<exp_id>/<output_file>`. Default is usually fine. |
 
 Note: `argparse` treats `--flag=value` and `--flag value` (space instead
 of `=`) as equivalent — the `=` is optional, purely a matter of style.
@@ -174,11 +173,12 @@ of `=`) as equivalent — the `=` is optional, purely a matter of style.
 Example:
 
 ```bash
-python main.py --path=../sdl_data --name_dir=sdl_exp_309 --output_file=metadata.json --templates_dir=./templates
+python main.py --path=../sdl_data/sdl_exp_309 --output_file=metadata.json --templates_dir=./templates
 ```
 
 This reads experiment data (and its README) from `../sdl_data/sdl_exp_309`,
-and writes the result to `./templates/sdl_exp_309/metadata.json`.
+derives the experiment name `sdl_exp_309` from the last path segment, and
+writes the result to `./templates/sdl_exp_309/metadata.json`.
 
 ## Things to watch out for
 
@@ -191,7 +191,7 @@ and writes the result to `./templates/sdl_exp_309/metadata.json`.
   it unattended (e.g. in CI) without piping an answer.
 - **`experiment.json.j2` is regenerated on every run** from the README's
   meta fields and overwritten under
-  `<templates_dir>/<name_dir>/experiment.json.j2` — do not hand-edit it,
+  `<templates_dir>/<exp_id>/experiment.json.j2` — do not hand-edit it,
   your changes will be lost on the next run.
 - **File classification is extension/path-based**, driven entirely by the
   shared JSON maps in `templates/`. Add new extensions/paths there rather
@@ -199,8 +199,11 @@ and writes the result to `./templates/sdl_exp_309/metadata.json`.
 - **Nesting:** only direct top-level folders of the experiment directory
   become `simulation` entries; deeper nested folders are treated purely as
   structural grouping and do not get their own simulation object.
-- The output path is derived from `--templates_dir`/`--name_dir`, **not**
-  from `--path` — make sure both point at the same experiment name.
+- **The experiment name (`exp_id`) is derived from `--path`'s last path
+  segment**, and is used both to locate the raw data (`--path` itself) and
+  to build the output location (`<templates_dir>/<exp_id>/<output_file>`).
+  A trailing slash in `--path` (e.g. `../sdl_data/sdl_exp_309/`) is fine —
+  it doesn't change the derived name.
 
 ## Using the generated metadata.json in SDL
 
