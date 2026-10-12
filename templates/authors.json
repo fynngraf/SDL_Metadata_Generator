@@ -148,6 +148,26 @@
         "value": "0000-0002-2145-6133"
       }
     ]
+  },
+  "150": {
+    "givenName": "Chiara",
+    "familyName": "Scaini",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0001-9645-7918"
+      }
+    ]
+  },
+  "151": {
+    "givenName": "Elisa",
+    "familyName": "Zuccolo",
+    "identifiers": [
+      {
+        "scheme": "orcid",
+        "value": "0000-0002-8484-773X"
+      }
+    ]
   }
 }
 
