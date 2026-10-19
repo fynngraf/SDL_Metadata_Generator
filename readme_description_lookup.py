@@ -54,8 +54,13 @@ import yaml
 from pathlib import Path
 
 YAML_BLOCK_PATTERN = re.compile(r"```yaml\s*\n(.*?)```", re.DOTALL)
-DESCRIPTION_KEYS = {"folders", "extensions", "folders_fallback"}
+"""
+Keys with dedicated handling elsewhere - excluded from extract_meta()'s 
+generic pass-through so they don't leak into metadata.json as raw top-level 
+fields. "coverage" is handled separately by coverage_lookup.py.
 
+"""
+DESCRIPTION_KEYS = {"folders", "extensions", "folders_fallback", "coverage"}
 
 def load_readme_yaml(readme_path: str) -> dict:
     """

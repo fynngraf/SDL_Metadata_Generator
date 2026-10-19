@@ -19,6 +19,7 @@ from readme_description_lookup import (
     get_simulation_description,
     get_dataset_description,
 )
+from coverage_lookup import extract_coverage, get_coverage_target, build_api_coverage
 logger = logging.getLogger(__name__)
 
 # load author database
@@ -69,6 +70,11 @@ def generate_authors_str(authors: list) -> str:
 
     return ", ".join(authors_list)
 
+# convert the API-format coverage dict into a ready-to-insert extra-fields string for dataset.json.j2's "coverage_extra" slot
+def generate_coverage_extra(api_coverage: dict) -> str:
+    coverage_lines = [f'{json.dumps(key)}: {json.dumps(value)}' for key, value in api_coverage.items()]
+
+    return ",\n ".json(coverage_lines)
 
 # generate experiment.json.j2 from the README's meta fields
 def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id: str, debug: bool):
@@ -194,6 +200,15 @@ def main():
             f"{', '.join(sorted(missing_fields))}"
         )
     logger.debug(f'metadata : {meta}')
+
+    # Optional spatialCoverage/temporalCoverage for one dataset, attached
+    # further down once that dataset is actually rendered. Entirely optional
+    # - None if the README has no "coverage" section at all.
+
+    coverage = extract_coverage(readme_data)
+    coverage_target = get_coverage_target(coverage) if coverage else None
+    api_coverage = build_api_coverage(coverage) if coverage else None
+    coverage_applied = False
 
     # load author database
     authors_db = load_authors(args.templates_dir)
@@ -340,6 +355,12 @@ def main():
 
             #  TODO: More elaborate descriptions and input|output|data product|etc
 
+            coverage_extra = ""
+            if coverage is not None and file_name == coverage_target:
+                coverage_extra = generate_coverage_extra(api_coverage)
+                coverage_applied = True
+                logger.debug(f"Attaching coverage to dataset: {file_name}")
+
             if all_d_s != "": all_d_s += ","
             all_d_s += templ_d_s.render(
                 prefix=prefix,
@@ -347,8 +368,13 @@ def main():
                 file_name=file_name,
                 file_format=file_format,
                 description=description,
-                file_type=file_type
+                file_type=file_type,
+                coverage_extra=coverage_extra
             )
+
+    if coverage is not None and not coverage_applied:
+        logger.warning(f"coverage.target '{coverage_target}' was not found among the generated "f"datasets - no coverage was attached to any dataset")
+
 
     # write metadata.json
     output_file.parent.mkdir(parents=True, exist_ok=True)

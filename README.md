@@ -30,6 +30,7 @@ extensions:
 
 - `name`, `description`, `author`, `version` are required.
 - `folders`/`extensions`/`folders_fallback` are optional; `{folder}` = top-level run folder name.
+- Optional `coverage:` section sets spatial/temporal coverage on one dataset (default `README.md`) — see `README_extended.md`.
 - Only a file named exactly `README.md` is read (no `README` / `README.txt`).
 
 ## Run
@@ -64,4 +65,4 @@ sdl_metadata_generator --path=<path to experiment directory>
 made available via `export PYTHONPATH=$PYTHONPATH:/<path to SDL_Metadata_Generator>`.
 Not implemented yet.
 
-Full details (README format, authors, descriptions, `--debug`, admin options): see `README_extended.md`.
+Full details (README format, authors, descriptions, coverage, `--debug`, admin options): see `README_extended.md`.

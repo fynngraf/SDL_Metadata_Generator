@@ -29,7 +29,10 @@ For one experiment directory, the generator:
 5. Assigns descriptions to simulations/datasets from the `folders`,
    `extensions` and `folders_fallback` sections of the same YAML block;
    falls back to a generic description if a file/folder isn't covered.
-6. Renders `experiment.json.j2`, `simulation.json.j2` and `dataset.json.j2`
+6. Optionally attaches `spatialCoverage`/`temporalCoverage` to exactly one
+   dataset entry, from an optional `coverage:` section — see "Coverage"
+   below.
+7. Renders `experiment.json.j2`, `simulation.json.j2` and `dataset.json.j2`
    and writes the combined result to the output file.
 
 ## Requirements
@@ -48,6 +51,7 @@ sdl_metadata_generator.py   # entry point
 file_format_lookup.py
 file_type_lookup.py
 readme_description_lookup.py
+coverage_lookup.py
 templates/
   authors.json              # shared author database (author ID -> name/identifiers)
   file_format_map.json      # file extension -> file format
@@ -96,6 +100,11 @@ extensions:
 
 folders_fallback:
   Mesh: "Mesh-related output"
+
+coverage:
+  temporal: {start: 2011-03-11, end: 2011-03-11}
+  spatial:
+    centroid: {lat: 38.3, lon: 142.4}
 ```
 
 - `name`, `description`, `author`, `version` are **required** — the
@@ -103,8 +112,8 @@ folders_fallback:
   empty (an empty string/list counts as missing, not just an absent key).
 - Any other top-level key (e.g. `keywords`, `path`) is optional and is
   passed through into the metadata file as-is.
-- `folders`, `extensions`, `folders_fallback` are all optional; see
-  "Descriptions" below for how they're matched.
+- `folders`, `extensions`, `folders_fallback` and `coverage` are all
+  optional; see "Descriptions" and "Coverage" below for how they work.
 
 ## Authors
 
@@ -160,6 +169,50 @@ The placeholder `{folder}` in any description is replaced with the
 **top-level** run/model folder name the file is located under (not the
 file's direct parent folder if it's nested deeper).
 
+## Coverage
+
+An optional `coverage:` section in the README's yaml block sets
+`spatialCoverage`/`temporalCoverage` on exactly **one** dataset entry in
+the generated metadata. SDL only supports coverage per-dataset, not per
+experiment or version — one dataset with coverage is enough, SDL shows it
+for the whole experiment.
+
+```yaml
+coverage:
+  temporal: {start: 2011-03-11, end: 2011-03-11}
+  spatial:
+    centroid: {lat: 38.3, lon: 142.4}
+    polygon: "POLYGON((141.0 35.5, 145.0 35.5, 145.0 40.5, 141.0 40.5, 141.0 35.5))"  # optional
+  target: README.md   # optional, default shown
+```
+
+- **`coverage` itself is entirely optional** — if the section is absent,
+  nothing changes; no dataset gets coverage.
+- `temporal` and `spatial` are each optional on their own (only one of
+  them, both, or neither).
+- `temporal.start`/`temporal.end` must be valid ISO dates (`YYYY-MM-DD`),
+  and `start` must not be after `end`.
+- `spatial.centroid.lat` must be in `[-90, 90]`, `spatial.centroid.lon` in
+  `[-180, 180]`.
+- `spatial.polygon` is optional, given as WKT
+  (`POLYGON((lon lat, lon lat, ...))`); the ring is closed automatically
+  if the first and last point don't already match. Needs at least 3
+  points.
+- `target` is the exact filename of the dataset the coverage gets
+  attached to — defaults to `README.md`. If no generated dataset has that
+  name, the script logs a warning and continues **without** attaching
+  coverage anywhere (it does not fail the run).
+- **Invalid values raise a hard error and stop the run** — bad date
+  format, `start` after `end`, lat/lon out of range, or a malformed WKT
+  polygon — same philosophy as the required top-level fields (`name`,
+  `description`, ...): a typo here should be obvious immediately, not
+  silently produce wrong/missing coverage.
+- The output format is SDL's **dataset API format**
+  (`centroid.coordinates` as `[lon, lat]`), not the export/download
+  format — SDL rejects the export format if submitted
+  (`must NOT have additional properties`). This conversion happens
+  automatically; you only ever write `lat`/`lon` in the README.
+
 ## Running the script
 
 The script currently must be started from **inside the
@@ -204,7 +257,8 @@ The script uses Python's `logging` module instead of plain `print()`.
   on the console — the normal status output.
 - **With `--debug`**:
   - `DEBUG`-level messages are shown too (per-file/per-simulation detail,
-    which rule decided a `file_type`, etc.).
+    which rule decided a `file_type`, whether coverage was attached to a
+    dataset, etc.).
   - The same log output is additionally written to
     `logs/<exp_id>_run.log` (overwritten on every run — no history is
     kept across runs).
@@ -258,6 +312,13 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
 - **`experiment.json.j2` is only written with `--debug`**, to `logs/`
   (see "Logging and --debug" above) — without `--debug` it is not
   generated at all.
+- **Coverage target mismatch:** if `coverage.target` doesn't match the
+  filename of any generated dataset, the script logs a warning and
+  continues without attaching coverage anywhere — it does not fail the
+  run. Check the console output (or the log file with `--debug`) if you
+  expect coverage but don't see it in the result.
+- **Invalid coverage values are a hard error** (bad date, `start` after
+  `end`, lat/lon out of range, malformed polygon) — see "Coverage" above.
 - **File classification is extension/path-based**, driven entirely by the
   shared JSON maps in `templates/`. Add new extensions/paths there rather
   than editing `sdl_metadata_generator.py`.
