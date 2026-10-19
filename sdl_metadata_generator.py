@@ -74,7 +74,7 @@ def generate_authors_str(authors: list) -> str:
 def generate_coverage_extra(api_coverage: dict) -> str:
     coverage_lines = [f'{json.dumps(key)}: {json.dumps(value)}' for key, value in api_coverage.items()]
 
-    return ",\n ".json(coverage_lines)
+    return ",\n ".join(coverage_lines)
 
 # generate experiment.json.j2 from the README's meta fields
 def generate_exp_template(env: Environment, meta: dict, authors_str: str, exp_id: str, debug: bool):
