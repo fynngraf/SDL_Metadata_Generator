@@ -356,7 +356,7 @@ def main():
             #  TODO: More elaborate descriptions and input|output|data product|etc
 
             coverage_extra = ""
-            if coverage is not None and file_name == coverage_target:
+            if coverage is not None and (coverage_target == "all" or file_name == coverage_target):
                 coverage_extra = generate_coverage_extra(api_coverage)
                 coverage_applied = True
                 logger.debug(f"Attaching coverage to dataset: {file_name}")

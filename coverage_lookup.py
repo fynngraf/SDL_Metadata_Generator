@@ -14,7 +14,7 @@ Expected structure:
       spatial:
         centroid: {lat: <float>, lon: <float>}
         polygon: "POLYGON((lon lat, lon lat, ...))"   # optional
-      target: <dataset file name>   # optional, default "README.md"
+      target: <dataset file name> | "all"   # optional, default "all"
 
 "temporal" and "spatial" are both optional (one, both, or neither may be
 given); "coverage" itself is entirely optional - if absent, this module
@@ -29,7 +29,7 @@ experiment or version level.
 import re
 from datetime import date
 
-DEFAULT_TARGET = "README.md"
+DEFAULT_TARGET = "all"
 
 WKT_POLYGON_PATTERN = re.compile(r"^POLYGON\s*\(\((.+)\)\)$", re.IGNORECASE)
 
@@ -43,7 +43,10 @@ def extract_coverage(data: dict) -> dict | None:
 
 
 def get_coverage_target(coverage: dict) -> str:
-    """Name of the dataset file the coverage should be attached to."""
+    """Name of the dataset file the coverage should be attached to, or the
+        literal string "all" (the default) to attach it to every generated
+        dataset entry
+    """
     return coverage.get("target", DEFAULT_TARGET)
 
 
