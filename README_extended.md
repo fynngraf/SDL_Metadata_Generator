@@ -27,10 +27,11 @@ For one experiment directory, the generator:
    `templates/file_format_map.json`, `templates/file_type_map.json` and
    `templates/file_type_path_map.json`.
 5. Assigns descriptions to simulations/datasets from the `folders`,
-   `extensions` and `folders_fallback` sections of the same YAML block;
-   falls back to a generic description if a file/folder isn't covered.
-6. Optionally attaches `spatialCoverage`/`temporalCoverage` to exactly one
-   dataset entry, from an optional `coverage:` section — see "Coverage"
+   `extensions`, `folders_fallback` and `filename_keywords` sections of
+   the same YAML block; falls back to a generic description if a
+   file/folder isn't covered.
+6. Optionally attaches `spatialCoverage`/`temporalCoverage` to one or all
+   dataset entries, from an optional `coverage:` section — see "Coverage"
    below.
 7. Renders `experiment.json.j2`, `simulation.json.j2` and `dataset.json.j2`
    and writes the combined result to the output file.
@@ -101,6 +102,10 @@ extensions:
 folders_fallback:
   Mesh: "Mesh-related output"
 
+filename_keywords:
+  surface: "{folder}: surface output"
+  cell: "{folder}: volume (stress field) output"
+
 coverage:
   temporal: {start: 2011-03-11, end: 2011-03-11}
   spatial:
@@ -112,8 +117,9 @@ coverage:
   empty (an empty string/list counts as missing, not just an absent key).
 - Any other top-level key (e.g. `keywords`, `path`) is optional and is
   passed through into the metadata file as-is.
-- `folders`, `extensions`, `folders_fallback` and `coverage` are all
-  optional; see "Descriptions" and "Coverage" below for how they work.
+- `folders`, `extensions`, `folders_fallback`, `filename_keywords` and
+  `coverage` are all optional; see "Descriptions" and "Coverage" below
+  for how they work.
 
 ## Authors
 
@@ -153,14 +159,16 @@ to catch typos in author IDs.
 
 ## Descriptions
 
-`folders`, `extensions` and `folders_fallback` control the `description`
-field of generated simulation/dataset entries. Lookup order for a file:
+`folders`, `extensions`, `folders_fallback` and `filename_keywords`
+control the `description` field of generated simulation/dataset entries.
+Lookup order for a file:
 
 1. `extensions[".ext"]` **if** written as `{description: ..., priority: true}`
-2. `folders[<exact parent folder name>]`
-3. `extensions[".ext"]` (non-priority form, i.e. a plain string)
-4. `folders_fallback[<exact parent folder name>]`
-5. generic fallback: `"Description of <file_name>"`
+2. `filename_keywords[<keyword>]` (see below)
+3. `folders[<exact parent folder name>]`
+4. `extensions[".ext"]` (non-priority form, i.e. a plain string)
+5. `folders_fallback[<exact parent folder name>]`
+6. generic fallback: `"Description of <file_name>"`
 
 For simulations (top-level folders), only `folders` is checked; unmatched
 folders fall back to `"Description of <folder_name>"`.
@@ -169,13 +177,48 @@ The placeholder `{folder}` in any description is replaced with the
 **top-level** run/model folder name the file is located under (not the
 file's direct parent folder if it's nested deeper).
 
+### filename_keywords
+
+For file names where the extension and folder alone can't tell datasets
+apart — e.g. SeisSol output files that only differ in a keyword placed
+right before the extension:
+
+```yaml
+filename_keywords:
+  surface: "{folder}: surface output"
+  fault: "{folder}: fault output"
+  cell: "{folder}: volume (stress field) output"
+  vertex: "{folder}: volume (stress field) output"
+  energy: "{folder}: energy output"
+  clustering: "{folder}: technical output"
+  flops: "{folder}: technical output"
+  threadPinning: "{folder}: technical output"
+  miniSeissol: "{folder}: technical output"
+```
+
+- The file name (without its extension) is split into tokens on `_`/`-`.
+  A keyword matches if it equals one of those tokens **exactly**
+  (case-insensitive) — not a plain substring match. This avoids false
+  matches like `"fault"` inside `default_params.csv`.
+- Keywords are checked **in the order they're listed** — the first match
+  wins. A file name can contain more than one keyword token (e.g.
+  `..._normal-surface_cell.h5` contains both `surface` and `cell`), so
+  list more specific keywords (`surface`, `fault`) before the generic
+  ones they can appear together with (`cell`, `vertex`).
+- `filename_keywords` is checked **before** `folders`/`extensions`
+  (non-priority), but **after** any `extensions` entry marked
+  `priority: true` — a priority extension always wins. If you want
+  `filename_keywords` to decide for a given extension (e.g. `.h5`,
+  `.xdmf`), make sure that extension is **not** also marked
+  `priority: true`.
+
 ## Coverage
 
 An optional `coverage:` section in the README's yaml block sets
-`spatialCoverage`/`temporalCoverage` on exactly **one** dataset entry in
-the generated metadata. SDL only supports coverage per-dataset, not per
-experiment or version — one dataset with coverage is enough, SDL shows it
-for the whole experiment.
+`spatialCoverage`/`temporalCoverage` on dataset entries in the generated
+metadata. SDL only supports coverage per-dataset, not per experiment or
+version — but even a single dataset with coverage is enough for SDL to
+show it for the whole experiment.
 
 ```yaml
 coverage:
@@ -183,7 +226,7 @@ coverage:
   spatial:
     centroid: {lat: 38.3, lon: 142.4}
     polygon: "POLYGON((141.0 35.5, 145.0 35.5, 145.0 40.5, 141.0 40.5, 141.0 35.5))"  # optional
-  target: README.md   # optional, default shown
+  target: all   # optional, default shown - or a specific dataset filename, e.g. README.md
 ```
 
 - **`coverage` itself is entirely optional** — if the section is absent,
@@ -198,10 +241,13 @@ coverage:
   (`POLYGON((lon lat, lon lat, ...))`); the ring is closed automatically
   if the first and last point don't already match. Needs at least 3
   points.
-- `target` is the exact filename of the dataset the coverage gets
-  attached to — defaults to `README.md`. If no generated dataset has that
-  name, the script logs a warning and continues **without** attaching
-  coverage anywhere (it does not fail the run).
+- `target` controls which dataset(s) get the coverage:
+  - **`all`** (the default, used if `target` is omitted): every generated
+    dataset entry gets the same coverage.
+  - **a specific filename** (e.g. `README.md`, `data.par`): only the
+    dataset with that exact filename gets the coverage. If no generated
+    dataset has that name, the script logs a warning and continues
+    **without** attaching coverage anywhere (it does not fail the run).
 - **Invalid values raise a hard error and stop the run** — bad date
   format, `start` after `end`, lat/lon out of range, or a malformed WKT
   polygon — same philosophy as the required top-level fields (`name`,
@@ -312,11 +358,12 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
 - **`experiment.json.j2` is only written with `--debug`**, to `logs/`
   (see "Logging and --debug" above) — without `--debug` it is not
   generated at all.
-- **Coverage target mismatch:** if `coverage.target` doesn't match the
-  filename of any generated dataset, the script logs a warning and
-  continues without attaching coverage anywhere — it does not fail the
-  run. Check the console output (or the log file with `--debug`) if you
-  expect coverage but don't see it in the result.
+- **Coverage target mismatch:** if `coverage.target` is set to a specific
+  filename that doesn't match any generated dataset (this doesn't apply
+  to the default `target: all`), the script logs a warning and continues
+  without attaching coverage anywhere — it does not fail the run. Check
+  the console output (or the log file with `--debug`) if you expect
+  coverage but don't see it in the result.
 - **Invalid coverage values are a hard error** (bad date, `start` after
   `end`, lat/lon out of range, malformed polygon) — see "Coverage" above.
 - **File classification is extension/path-based**, driven entirely by the

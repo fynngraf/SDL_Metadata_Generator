@@ -29,8 +29,8 @@ extensions:
 ```
 
 - `name`, `description`, `author`, `version` are required.
-- `folders`/`extensions`/`folders_fallback` are optional; `{folder}` = top-level run folder name.
-- Optional `coverage:` section sets spatial/temporal coverage on one dataset (default `README.md`) — see `README_extended.md`.
+- `folders`/`extensions`/`folders_fallback`/`filename_keywords` are optional; `{folder}` = top-level run folder name.
+- Optional `coverage:` section sets spatial/temporal coverage, by default on every dataset (`target: all`) — see `README_extended.md`.
 - Only a file named exactly `README.md` is read (no `README` / `README.txt`).
 
 ## Run
