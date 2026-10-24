@@ -29,21 +29,34 @@ script. Expected structure of that block:
     folders_fallback:
       <folder_name>: <description>
       ...
+    filename_keywords:
+      <keyword>: <description, optionally containing {folder}>
+      ...
 
-"folders", "extensions" and "folders_fallback" are reserved for dataset/
-simulation descriptions; every other top-level key is treated as
-experiment metadata and passed through into metadata.json.
+"folders", "extensions", "folders_fallback" and "filename_keywords" are
+reserved for dataset/simulation descriptions; every other top-level key is
+treated as experiment metadata and passed through into metadata.json.
 
-Normal priority (matches by exact folder name first, then file extension):
-1. "folders"            - exact immediate parent folder name
-2. "extensions"          - file extension
-3. "folders_fallback"    - exact immediate parent folder name (second chance)
-4. generic fallback description
+Priority order:
+1. "extensions" entries marked "priority: true" - always wins
+2. "filename_keywords"   - keyword found as a token in the file name
+                            (split on "_"/"-", matched case-insensitively),
+                            checked in the order the keywords are listed -
+                            the first one found wins
+3. "folders"             - exact immediate parent folder name
+4. "extensions"          - file extension (non-priority)
+5. "folders_fallback"    - exact immediate parent folder name (second chance)
+6. generic fallback description
 
-Exception: if an "extensions" entry is written in the long form with
-"priority: true", that extension's description wins even over a matching
-"folders" entry - useful when a specific file type should always be
-described the same way, regardless of which folder it happens to sit in.
+"filename_keywords" exists for file names where the extension and folder
+alone can't tell datasets apart, e.g. SeisSol output files that only differ
+in a keyword placed right before the extension:
+    run_normal-surface_cell.h5   -> "surface"  (not "cell")
+    run_normal-fault_vertex.h5   -> "fault"    (not "vertex")
+    run_normal_cell.h5           -> "cell"
+List more specific keywords (e.g. "surface", "fault") before the generic
+ones they can appear together with (e.g. "cell", "vertex") - list order is
+priority order, since a file name can contain more than one keyword token.
 
 The placeholder "{folder}" in a description is replaced with the top-level
 folder name (e.g. "J1") if one is provided.
@@ -60,7 +73,9 @@ generic pass-through so they don't leak into metadata.json as raw top-level
 fields. "coverage" is handled separately by coverage_lookup.py.
 
 """
-DESCRIPTION_KEYS = {"folders", "extensions", "folders_fallback", "coverage"}
+DESCRIPTION_KEYS = {"folders", "extensions", "folders_fallback", "filename_keywords", "coverage"}
+
+FILENAME_TOKEN_PATTERN = re.compile(r"[_-]")
 
 def load_readme_yaml(readme_path: str) -> dict:
     """
@@ -105,6 +120,7 @@ def extract_descriptions(data: dict) -> dict:
         "folders": data.get("folders", {}) or {},
         "extensions": data.get("extensions", {}) or {},
         "folders_fallback": data.get("folders_fallback", {}) or {},
+        "filename_keywords": data.get("filename_keywords", {}) or {},
     }
 
 
@@ -125,6 +141,21 @@ def _normalize_extension_entry(entry) -> tuple[str, bool]:
     return entry, False
 
 
+def _match_filename_keyword(filename_keywords: dict, file_name: str) -> str | None:
+    """
+    Splits file_name (without its extension) into tokens on "_"/"-" and
+    checks filename_keywords in the order given - the first keyword found
+    as an exact token (case-insensitive) wins. Returns None if none match.
+    """
+    stem = file_name.rsplit(".", 1)[0]
+    tokens = {t.lower() for t in FILENAME_TOKEN_PATTERN.split(stem)}
+
+    for keyword, description in filename_keywords.items():
+        if keyword.lower() in tokens:
+            return description
+    return None
+
+
 def get_simulation_description(descriptions: dict, folder_name: str) -> str:
     """
     Description for a top-level folder itself (e.g. "J1" as a simulation).
@@ -143,11 +174,12 @@ def get_dataset_description(
     """
     Description for a file (dataset), checked in this order:
     0. descriptions["extensions"][".ext"] IF marked "priority: true"
-       (overrides folders on purpose)
-    1. descriptions["folders"][folder_name]      (exact immediate parent folder)
-    2. descriptions["extensions"][".ext"]        (file extension, non-priority)
-    3. descriptions["folders_fallback"][folder_name]
-    4. generic fallback: "Description of <file_name>"
+       (overrides everything else on purpose)
+    1. descriptions["filename_keywords"]         (keyword token in the file name)
+    2. descriptions["folders"][folder_name]      (exact immediate parent folder)
+    3. descriptions["extensions"][".ext"]        (file extension, non-priority)
+    4. descriptions["folders_fallback"][folder_name]
+    5. generic fallback: "Description of <file_name>"
     """
     extension = "." + file_name.split(".")[-1].lower()
 
@@ -155,6 +187,10 @@ def get_dataset_description(
         ext_desc, is_priority = _normalize_extension_entry(descriptions["extensions"][extension])
         if is_priority:
             return _apply_placeholder(ext_desc, top_level_name)
+
+    keyword_desc = _match_filename_keyword(descriptions["filename_keywords"], file_name)
+    if keyword_desc is not None:
+        return _apply_placeholder(keyword_desc, top_level_name)
 
     if folder_name in descriptions["folders"]:
         return _apply_placeholder(descriptions["folders"][folder_name], top_level_name)
