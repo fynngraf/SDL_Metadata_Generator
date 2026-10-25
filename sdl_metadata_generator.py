@@ -19,7 +19,13 @@ from readme_description_lookup import (
     get_simulation_description,
     get_dataset_description,
 )
-from coverage_lookup import extract_coverage, get_coverage_target, build_api_coverage
+from coverage_lookup import (
+    extract_coverage,
+    get_coverage_target,
+    build_api_coverage,
+    is_per_dataset_coverage,
+    build_per_dataset_coverage,
+)
 logger = logging.getLogger(__name__)
 
 # load author database
@@ -201,14 +207,25 @@ def main():
         )
     logger.debug(f'metadata : {meta}')
 
-    # Optional spatialCoverage/temporalCoverage for one dataset, attached
-    # further down once that dataset is actually rendered. Entirely optional
-    # - None if the README has no "coverage" section at all.
+    # Optional spatialCoverage/temporalCoverage, attached further down once
+    # each dataset is actually rendered. Entirely optional - everything
+    # below stays None if the README has no "coverage" section at all.
+    # Two forms: a single shared block (coverage_target/api_coverage) or
+    # one independent coverage entry per dataset path
+    # (per_dataset_coverage) - see coverage_lookup.py for both formats.
 
     coverage = extract_coverage(readme_data)
-    coverage_target = get_coverage_target(coverage) if coverage else None
-    api_coverage = build_api_coverage(coverage) if coverage else None
+    per_dataset_coverage = None
+    coverage_target = None
+    api_coverage = None
+    if coverage is not None:
+        if is_per_dataset_coverage(coverage):
+            per_dataset_coverage = build_per_dataset_coverage(coverage)
+        else:
+            coverage_target = get_coverage_target(coverage)
+            api_coverage = build_api_coverage(coverage)
     coverage_applied = False
+    applied_dataset_paths = set()
 
     # load author database
     authors_db = load_authors(args.templates_dir)
@@ -356,7 +373,14 @@ def main():
             #  TODO: More elaborate descriptions and input|output|data product|etc
 
             coverage_extra = ""
-            if coverage is not None and (coverage_target == "all" or file_name == coverage_target):
+            if per_dataset_coverage is not None:
+                entry_coverage = per_dataset_coverage.get(dataset_path)
+                if entry_coverage:
+                    coverage_extra = generate_coverage_extra(entry_coverage)
+                    coverage_applied = True
+                    applied_dataset_paths.add(dataset_path)
+                    logger.debug(f"Attaching per-dataset coverage to dataset: {dataset_path}")
+            elif coverage is not None and (coverage_target == "all" or file_name == coverage_target):
                 coverage_extra = generate_coverage_extra(api_coverage)
                 coverage_applied = True
                 logger.debug(f"Attaching coverage to dataset: {file_name}")
@@ -372,7 +396,15 @@ def main():
                 coverage_extra=coverage_extra
             )
 
-    if coverage is not None and not coverage_applied:
+    if per_dataset_coverage is not None:
+        missing = sorted(set(per_dataset_coverage) - applied_dataset_paths)
+        if missing:
+            preview = ", ".join(missing[:5]) + (", ..." if len(missing) > 5 else "")
+            logger.warning(
+                f"coverage entries for {len(missing)} dataset path(s) were not found among the "
+                f"generated datasets and were not attached: {preview}"
+            )
+    elif coverage is not None and not coverage_applied:
         logger.warning(f"coverage.target '{coverage_target}' was not found among the generated "f"datasets - no coverage was attached to any dataset")
 
 
