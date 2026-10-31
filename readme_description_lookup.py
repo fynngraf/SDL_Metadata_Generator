@@ -39,8 +39,10 @@ treated as experiment metadata and passed through into metadata.json.
 
 Priority order:
 1. "extensions" entries marked "priority: true" - always wins
-2. "filename_keywords"   - keyword found as a token in the file name
-                            (split on "_"/"-", matched case-insensitively),
+2. "filename_keywords"   - a keyword (one word, e.g. "surface", or several
+                            words joined with "_"/"-", e.g. "volume_cell")
+                            found as a contiguous run of tokens in the file
+                            name (split on "_"/"-", matched case-insensitively),
                             checked in the order the keywords are listed -
                             the first one found wins
 3. "folders"             - exact immediate parent folder name
@@ -51,12 +53,16 @@ Priority order:
 "filename_keywords" exists for file names where the extension and folder
 alone can't tell datasets apart, e.g. SeisSol output files that only differ
 in a keyword placed right before the extension:
-    run_normal-surface_cell.h5   -> "surface"  (not "cell")
-    run_normal-fault_vertex.h5   -> "fault"    (not "vertex")
-    run_normal_cell.h5           -> "cell"
-List more specific keywords (e.g. "surface", "fault") before the generic
-ones they can appear together with (e.g. "cell", "vertex") - list order is
-priority order, since a file name can contain more than one keyword token.
+    run-volume_cell.h5    -> "volume_cell"   (not "volume" or "cell" alone)
+    run-volume_vertex.h5  -> "volume_vertex" (different description than
+                              "volume_cell", even though both contain "volume")
+    run-surface.xdmf      -> "surface"       (single-word keyword, no cell/vertex suffix)
+A multi-word keyword (joined with "_"/"-") only matches where its words
+appear immediately adjacent and in that order; a single-word keyword
+matches that one token anywhere. List more specific keywords (longer/
+multi-word, or ones that should win over a shorter keyword they overlap
+with) before more generic ones - list order is priority order, since a
+file name can match more than one configured keyword.
 
 The placeholder "{folder}" in a description is replaced with the top-level
 folder name (e.g. "J1") if one is provided.
@@ -141,17 +147,34 @@ def _normalize_extension_entry(entry) -> tuple[str, bool]:
     return entry, False
 
 
+def _contains_subsequence(tokens: list, sub: list) -> bool:
+    """True if `sub` occurs as a contiguous, ordered run inside `tokens`."""
+    n, m = len(tokens), len(sub)
+    if m == 0:
+        return False
+    return any(tokens[i:i + m] == sub for i in range(n - m + 1))
+
+
 def _match_filename_keyword(filename_keywords: dict, file_name: str) -> str | None:
     """
     Splits file_name (without its extension) into tokens on "_"/"-" and
-    checks filename_keywords in the order given - the first keyword found
-    as an exact token (case-insensitive) wins. Returns None if none match.
+    checks filename_keywords in the order given - the first keyword whose
+    own tokens (also split on "_"/"-") occur as a contiguous, ordered run
+    in the file name's tokens (case-insensitive) wins. Returns None if none
+    match.
+
+    A single-word keyword (e.g. "surface") matches if that one token
+    appears anywhere. A multi-word keyword (e.g. "volume_cell") matches
+    only where "volume" is immediately followed by "cell" - this lets
+    e.g. "..._volume_cell.h5" and "..._volume_vertex.h5" get different
+    descriptions, instead of both just matching "volume".
     """
     stem = file_name.rsplit(".", 1)[0]
-    tokens = {t.lower() for t in FILENAME_TOKEN_PATTERN.split(stem)}
+    tokens = [t.lower() for t in FILENAME_TOKEN_PATTERN.split(stem) if t]
 
     for keyword, description in filename_keywords.items():
-        if keyword.lower() in tokens:
+        keyword_tokens = [t.lower() for t in FILENAME_TOKEN_PATTERN.split(keyword) if t]
+        if _contains_subsequence(tokens, keyword_tokens):
             return description
     return None
 
