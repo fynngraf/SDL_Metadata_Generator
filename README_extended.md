@@ -181,30 +181,45 @@ file's direct parent folder if it's nested deeper).
 
 For file names where the extension and folder alone can't tell datasets
 apart — e.g. SeisSol output files that only differ in a keyword placed
-right before the extension:
+right before the extension. SeisSol's current output naming is
+`Prefix-SlurmID-outputfilename` (the `outputfilename` part itself has no
+`-`), where `outputfilename` is `{volume|surface|fault}_{cell|vertex}.h5`
+or `{volume|surface|fault}.xdmf`:
 
 ```yaml
 filename_keywords:
+  volume_cell: "{folder}: stress field volume output (cell-centered)"
+  volume_vertex: "{folder}: stress field volume output (vertex-centered)"
+  surface_cell: "{folder}: surface output (cell-centered)"
+  surface_vertex: "{folder}: surface output (vertex-centered)"
+  fault_cell: "{folder}: fault output (cell-centered)"
+  fault_vertex: "{folder}: fault output (vertex-centered)"
+  volume: "{folder}: stress field volume output"
   surface: "{folder}: surface output"
   fault: "{folder}: fault output"
-  cell: "{folder}: volume (stress field) output"
-  vertex: "{folder}: volume (stress field) output"
-  energy: "{folder}: energy output"
-  clustering: "{folder}: technical output"
-  flops: "{folder}: technical output"
-  threadPinning: "{folder}: technical output"
+  receiver: "{folder}: receiver output"
   miniSeissol: "{folder}: technical output"
 ```
 
-- The file name (without its extension) is split into tokens on `_`/`-`.
-  A keyword matches if it equals one of those tokens **exactly**
-  (case-insensitive) — not a plain substring match. This avoids false
-  matches like `"fault"` inside `default_params.csv`.
+- A keyword is **one word** (e.g. `surface`) or **several words joined
+  with `_`/`-`** (e.g. `volume_cell`). The file name (without its
+  extension) is split into tokens the same way, on `_`/`-`.
+  - A one-word keyword matches if that token appears **anywhere** in the
+    file name (case-insensitive).
+  - A multi-word keyword matches only where its words appear as a
+    **contiguous, ordered run** — e.g. `volume_cell` matches
+    `..._volume_cell.h5` but not `..._volume_vertex.h5`, even though
+    both contain `volume`. This is what lets `volume_cell` and
+    `volume_vertex` get different descriptions, instead of both just
+    matching a shared `volume` keyword.
+  - Either way, it's always a match against whole tokens, never a plain
+    substring match — `"fault"` does **not** match inside
+    `default_params.csv` (the token there is `default`, not `fault`).
 - Keywords are checked **in the order they're listed** — the first match
-  wins. A file name can contain more than one keyword token (e.g.
-  `..._normal-surface_cell.h5` contains both `surface` and `cell`), so
-  list more specific keywords (`surface`, `fault`) before the generic
-  ones they can appear together with (`cell`, `vertex`).
+  wins. List more specific keywords (longer/multi-word, like
+  `volume_cell`) before shorter ones they overlap with (like `volume`,
+  which also matches a plain `..._volume.xdmf` with no cell/vertex
+  suffix) — list order is priority order.
 - `filename_keywords` is checked **before** `folders`/`extensions`
   (non-priority), but **after** any `extensions` entry marked
   `priority: true` — a priority extension always wins. If you want

@@ -57,20 +57,27 @@ folders_fallback:
 
 filename_keywords:
   # More specific than "extensions" - distinguishes SeisSol output files
-  # that share the same extension but differ in a keyword placed right
-  # before it (e.g. run_normal-surface_cell.h5 -> "surface", not "cell").
-  # Matched as a whole token (split on "_"/"-", case-insensitive), checked
-  # in this order - list more specific keywords before the generic ones
-  # they can appear together with. Note: ".xdmf"/".h5" above must NOT be
-  # "priority: true", otherwise these entries would never be reached.
-  surface: "{folder}: surface output"
-  fault: "{folder}: fault output"
-  cell: "{folder}: volume (stress field) output"
-  vertex: "{folder}: volume (stress field) output"
-  energy: "{folder}: energy output"
-  clustering: "{folder}: technical output"
-  flops: "{folder}: technical output"
-  threadPinning: "{folder}: technical output"
+  # that share the same extension but differ in a keyword in the file
+  # name. SeisSol's naming: Prefix-SlurmID-outputfilename, where
+  # outputfilename is {volume|surface|fault}_{cell|vertex}.h5 or
+  # {volume|surface|fault}.xdmf. A keyword can be one word ("surface") or
+  # several words joined with "_"/"-" ("volume_cell") - a multi-word
+  # keyword only matches where its words are adjacent, in that order, so
+  # "volume_cell" and "volume_vertex" below get different descriptions
+  # even though both contain "volume". List more specific (multi-word)
+  # keywords before the shorter ones they overlap with - list order is
+  # priority order. Note: ".xdmf"/".h5" above must NOT be "priority: true",
+  # otherwise these entries would never be reached.
+  volume_cell: "{folder}: stress field volume output (cell-centered)"
+  volume_vertex: "{folder}: stress field volume output (vertex-centered)"
+  surface_cell: "{folder}: surface output (cell-centered)"
+  surface_vertex: "{folder}: surface output (vertex-centered)"
+  fault_cell: "{folder}: fault output (cell-centered)"
+  fault_vertex: "{folder}: fault output (vertex-centered)"
+  volume: "{folder}: stress field volume output"      # .xdmf variant, no cell/vertex suffix
+  surface: "{folder}: surface output"                  # .xdmf variant
+  fault: "{folder}: fault output"                      # .xdmf variant
+  receiver: "{folder}: receiver output"
   miniSeissol: "{folder}: technical output"
 
 coverage:
@@ -84,4 +91,3 @@ coverage:
     centroid: {lat: 38.3, lon: 142.4}
     polygon: "POLYGON((141.0 35.5, 145.0 35.5, 145.0 40.5, 141.0 40.5, 141.0 35.5))"  # optional
   target: all  # optional, default shown - or a specific dataset filename, e.g. README.md
-```
