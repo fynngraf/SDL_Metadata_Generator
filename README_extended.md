@@ -384,12 +384,28 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
 - **File classification is extension/path-based**, driven entirely by the
   shared JSON maps in `templates/`. Add new extensions/paths there rather
   than editing `sdl_metadata_generator.py`.
-- **Unknown file extensions still trigger an interactive prompt**
-  (`Add '.ext' to the file_format/file_type dictionary? [y/n]`), asking
-  whether to permanently add the extension to the relevant map in
-  `templates/`. This is independent of `--debug` and can make the script
-  hang waiting for input if run unattended against data containing
-  unfamiliar extensions.
+- **`file_type` normally checks the folder path before the extension**:
+  if a keyword from `templates/file_type_path_map.json` (e.g. `output`,
+  `input`) appears anywhere in the file's folder path, that `file_type`
+  is used directly - the extension (`templates/file_type_map.json`) is
+  only a fallback for files whose path matches no such keyword. An
+  extension entry can override this by being written in the long form
+  `{"type": ..., "override_path": true}` instead of a plain string - that
+  extension's `file_type` then **always** wins, even in a folder whose
+  path would otherwise match a path keyword. The shipped
+  `file_type_map.json` already uses this for `.csv`
+  (`{"type": "product", "override_path": true}`), so a `.csv` file is
+  always classified as `product`, even inside a folder named `output`.
+- **Unknown file extensions trigger two separate interactive prompts**,
+  one after the other: first
+  `Add '.ext' to the file_format dictionary? [y/n]` (asking for the
+  `file_format`, e.g. `PAR`), then, independently,
+  `Add '.ext' to the file_type dictionary? [y/n]` (asking for the
+  `file_type`, e.g. `input`/`output`/`product`). Answering either one
+  saves it permanently to the corresponding map in `templates/`. This is
+  independent of `--debug` and can make the script hang waiting for
+  input (twice) if run unattended against data containing unfamiliar
+  extensions.
 - **The recursive file scan (`--path`) does not exclude hidden folders**
   such as `.git`. Pointing `--path` at (or into) a git repository will
   walk its `.git/` contents too, likely triggering many of the "unknown
