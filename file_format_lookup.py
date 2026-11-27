@@ -34,14 +34,14 @@ def load_format_map(map_file: str = DEFAULT_MAP_FILE) -> dict:
         initial_map = dict(DEFAULT_FORMAT_MAP)
         save_format_map(initial_map, map_file)
         return initial_map
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_format_map(format_map: dict, map_file: str = DEFAULT_MAP_FILE) -> None:
     path = Path(map_file)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(format_map, f, indent=4, sort_keys=True)
         f.write("\n")
 

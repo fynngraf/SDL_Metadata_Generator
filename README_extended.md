@@ -3,9 +3,9 @@
 A Python command-line tool that generates the metadata file required by
 [SDL](https://sdl.hpc.cineca.it) for a given experiment. It scans an experiment's
 data directory, classifies every file and folder, resolves author
-information, and renders the result from Jinja2 templates into a single
-metadata file — so you don't have to hand-write SDL metadata for every
-experiment.
+information, and builds the result as one data structure that is written
+as a single JSON metadata file — so you don't have to hand-write SDL
+metadata for every experiment.
 
 ## What it does
 
@@ -27,15 +27,19 @@ For one experiment directory, the generator:
    `templates/file_format_map.json`, `templates/file_type_map.json` and
    `templates/file_type_path_map.json`.
 5. Assigns descriptions to simulations/datasets from the `folders`,
-   `extensions` and `folders_fallback` sections of the same YAML block;
-   falls back to a generic description if a file/folder isn't covered.
-6. Renders `experiment.json.j2`, `simulation.json.j2` and `dataset.json.j2`
-   and writes the combined result to the output file.
+   `extensions`, `filename_keywords` and `folders_fallback` sections of
+   the same YAML block; falls back to a generic description if a
+   file/folder isn't covered.
+6. Attaches the optional spatial/temporal `coverage` from the same YAML
+   block to the datasets (see "Coverage" below).
+7. Builds the complete metadata as one Python dictionary and writes it
+   with `json.dump` (UTF-8) to the output file. The output is therefore
+   always valid JSON, whatever characters the README contains.
 
 ## Requirements
 
 - Python 3.10+ (the codebase uses `str | None` style type hints)
-- Packages: `jinja2`, `pyyaml`
+- Packages: `pyyaml`
 
 ```bash
 pip install -r requirements.txt
@@ -44,19 +48,23 @@ pip install -r requirements.txt
 ## Directory layout
 
 ```
-sdl_metadata_generator.py   # entry point
-file_format_lookup.py
-file_type_lookup.py
-readme_description_lookup.py
+sdl_metadata_generator.py      # entry point; builds and writes the metadata
+file_format_lookup.py          # file extension -> file format
+file_type_lookup.py            # extension / path keyword -> file type
+readme_description_lookup.py   # reads the README's yaml block, resolves descriptions
+coverage_lookup.py             # validates and converts the optional coverage section
 templates/
-  authors.json              # shared author database (author ID -> name/identifiers)
-  file_format_map.json      # file extension -> file format
-  file_type_map.json        # file extension -> file type
-  file_type_path_map.json   # path keyword -> file type (checked before extension)
-  dataset.json.j2           # template for a dataset entry
-  simulation.json.j2        # template for a simulation entry
-metadata/                   # generated output lands here (created automatically)
-logs/                       # debug artifacts land here, only with --debug (created automatically)
+  authors.json                 # shared author database (author ID -> name/identifiers)
+  file_format_map.json         # file extension -> file format
+  file_type_map.json           # file extension -> file type
+  file_type_path_map.json      # path keyword -> file type (checked before extension)
+  example_README.md            # ready-to-copy README template for a new experiment
+tests/
+  check_golden.py              # compares the output against the reference outputs
+  fixtures/                    # small experiment folders (empty files + real README)
+  expected/                    # reference output for each fixture
+metadata/                      # generated output lands here (created automatically)
+logs/                          # log file lands here, only with --debug (created automatically)
 ```
 
 The raw experiment data (and its `README.md`) lives separately, wherever
@@ -70,8 +78,8 @@ mkdir -p ../sdl_data/sdl_exp_NewExperiment
 vi ../sdl_data/sdl_exp_NewExperiment/README.md
 ```
 
-A ready-to-copy template for the README's yaml block is provided
-separately (`example_README.md`).
+A ready-to-copy template for the README's yaml block is provided in
+`templates/example_README.md`. It shows every optional section.
 
 Only a file named exactly `README.md` is read — `README` (no extension)
 and `README.txt` are **not** accepted (this was different in earlier
@@ -103,8 +111,12 @@ folders_fallback:
   empty (an empty string/list counts as missing, not just an absent key).
 - Any other top-level key (e.g. `keywords`, `path`) is optional and is
   passed through into the metadata file as-is.
-- `folders`, `extensions`, `folders_fallback` are all optional; see
-  "Descriptions" below for how they're matched.
+- `authors` and `versions` must **not** be used as keys: the generator
+  builds these fields itself and stops with an error if the README
+  contains them.
+- `folders`, `extensions`, `folders_fallback`, `filename_keywords` are all
+  optional; see "Descriptions" below for how they're matched.
+- `coverage` is optional; see "Coverage" below.
 
 ## Authors
 
@@ -137,21 +149,35 @@ list is optional but should contain an ORCID (`"scheme": "orcid"`)
 whenever one is available.
 
 An ID referenced in a README that does **not** exist in `authors.json`
-logs a warning (`Author ID '<id>' not found in authors.json`) — the run
+logs a warning (`Author ID <id> not found in authors.json - skipping`) — the run
 continues, that author is simply missing from the output. Check the
 console output (or `logs/<exp_id>_run.log` with `--debug`) after each run
 to catch typos in author IDs.
 
 ## Descriptions
 
-`folders`, `extensions` and `folders_fallback` control the `description`
-field of generated simulation/dataset entries. Lookup order for a file:
+`folders`, `extensions`, `filename_keywords` and `folders_fallback`
+control the `description` field of generated simulation/dataset entries.
+Lookup order for a file:
 
 1. `extensions[".ext"]` **if** written as `{description: ..., priority: true}`
-2. `folders[<exact parent folder name>]`
-3. `extensions[".ext"]` (non-priority form, i.e. a plain string)
-4. `folders_fallback[<exact parent folder name>]`
-5. generic fallback: `"Description of <file_name>"`
+2. `filename_keywords` — the first keyword (in the order listed) that
+   occurs in the file name
+3. `folders[<exact parent folder name>]`
+4. `extensions[".ext"]` (non-priority form, i.e. a plain string)
+5. `folders_fallback[<exact parent folder name>]`
+6. generic fallback: `"Description of <file_name>"`
+
+**`filename_keywords`** distinguish files that share an extension, e.g.
+SeisSol's `…-volume_cell.h5` and `…-surface_cell.h5`. The file name
+(without extension) is split into words at `_` and `-`; a keyword matches
+if its own words appear there **next to each other and in the same
+order** (case-insensitive). `volume_cell` therefore matches
+`…-volume_cell.h5` but not `…-volume_vertex.h5`. List more specific
+(multi-word) keywords before the shorter ones they overlap with — the
+first match wins. An `extensions` entry with `priority: true` wins over
+any keyword, so `.h5`/`.xdmf` must not be marked as priority if keywords
+should apply to them.
 
 For simulations (top-level folders), only `folders` is checked; unmatched
 folders fall back to `"Description of <folder_name>"`.
@@ -159,6 +185,48 @@ folders fall back to `"Description of <folder_name>"`.
 The placeholder `{folder}` in any description is replaced with the
 **top-level** run/model folder name the file is located under (not the
 file's direct parent folder if it's nested deeper).
+
+## Coverage
+
+The optional `coverage` section adds `spatialCoverage` and/or
+`temporalCoverage` to dataset entries. SDL accepts coverage only on
+datasets, not on the experiment or the version. Two forms exist:
+
+**Form 1 — one shared coverage**, attached to all datasets (default) or
+to the datasets with one specific file name:
+
+```yaml
+coverage:
+  temporal: {start: 2004-12-26, end: 2004-12-26}
+  spatial:
+    centroid: {lat: 3.3, lon: 95.9}
+    polygon: "POLYGON((92.0 2.0, 98.0 2.0, 98.0 10.0, 92.0 10.0, 92.0 2.0))"  # optional
+  target: all   # optional; or a file name, e.g. README.md
+```
+
+**Form 2 — coverage per dataset**, keyed by the exact dataset path as it
+appears in the generated metadata:
+
+```yaml
+coverage:
+  "run1/output/fault.xdmf":
+    temporal: {start: 2004-12-26, end: 2004-12-26}
+    spatial: {point: [95.9, 3.3], bbox: [92.0, 2.0, 98.0, 10.0]}
+  "run2/output/fault.xdmf":
+    spatial: {centroid: {lat: 3.3, lon: 95.9}}
+```
+
+- The form is detected automatically: if `coverage` has `temporal`,
+  `spatial` or `target` as a direct key, it is form 1, otherwise form 2.
+  A typo such as `spatail:` therefore silently switches to form 2.
+- `temporal` and `spatial` are each optional. Dates are ISO dates
+  (`YYYY-MM-DD`); for a full timestamp only the date part is kept.
+- Coordinates: `centroid` takes `lat`/`lon`; `point` is `[lon, lat]`;
+  `bbox` is `[minLon, minLat, maxLon, maxLat]`; `polygon` is a WKT
+  `POLYGON((lon lat, ...))`. Note the order **lon before lat** in
+  `point`, `bbox` and `polygon`.
+- A `target` (form 1) or a dataset path (form 2) that matches no dataset
+  only logs a warning; that coverage is then not attached anywhere.
 
 ## File format / file type lookup
 
@@ -265,11 +333,8 @@ The script uses Python's `logging` module instead of plain `print()`.
   - `DEBUG`-level messages are shown too (per-file/per-simulation detail,
     which rule decided a `file_type`, etc.).
   - The same log output is additionally written to
-    `logs/<exp_id>_run.log` (overwritten on every run — no history is
-    kept across runs).
-  - The intermediate artifact `logs/<exp_id>_experiment.json.j2` is
-    written (also overwritten on every run). Without `--debug`, this file
-    is **not** written at all.
+    `logs/<exp_id>_run.log` (UTF-8, overwritten on every run — no
+    history is kept across runs).
 
 ## Command-line arguments
 
@@ -282,8 +347,8 @@ default `./` only resolves to a meaningful experiment name by accident).
 |---------------------|------------------------------|--------------------------|-------------------------------------------------------------------------------|
 | `--path`            | `./`                         | **Yes** — always         | Path to the experiment's data directory, e.g. `../sdl_data/sdl_exp_309`. The last path segment is used as the experiment name (`exp_id`). |
 | `--output_file`     | `<exp_id>_metadata.json`     | No                        | Name of the generated output file, written to `metadata/<output_file>`. |
-| `--debug`           | off                           | No                        | Enables verbose (`DEBUG`-level) logging, a log file under `logs/`, and writes the intermediate `experiment.json.j2` artifact under `logs/`. |
-| `--templates_dir`   | `./templates`                | No — **admin/advanced option**, not needed for normal use | Path to the templates directory (holds `authors.json`, the shared maps, and `dataset.json.j2`/`simulation.json.j2`). Only relevant if that directory is moved or renamed; default matches this repo's layout. |
+| `--debug`           | off                           | No                        | Enables verbose (`DEBUG`-level) logging and a log file under `logs/`. |
+| `--templates_dir`   | `./templates`                | No — **admin/advanced option**, not needed for normal use | Path to the templates directory (holds `authors.json` and the shared maps). Only relevant if that directory is moved or renamed; default matches this repo's layout. |
 
 Note: `argparse` treats `--flag=value` and `--flag value` (space instead
 of `=`) as equivalent — the `=` is optional, purely a matter of style.
@@ -298,8 +363,7 @@ python sdl_metadata_generator.py --path=../sdl_data/sdl_exp_309 --debug
 This reads experiment data (and `README.md`) from `../sdl_data/sdl_exp_309`,
 derives the experiment name `sdl_exp_309` from the last path segment,
 writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
-`--debug`) also writes `logs/sdl_exp_309_run.log` and
-`logs/sdl_exp_309_experiment.json.j2`.
+`--debug`) also writes `logs/sdl_exp_309_run.log`.
 
 ## Things to watch out for
 
@@ -314,9 +378,9 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
   metadata file — there's no prompt or way to exclude it.
 - **Overwrite prompt:** if the output file already exists, the script
   asks interactively whether to overwrite it (see "Output file" above).
-- **`experiment.json.j2` is only written with `--debug`**, to `logs/`
-  (see "Logging and --debug" above) — without `--debug` it is not
-  generated at all.
+- **An error never destroys an existing output file.** The metadata is
+  first written to `<output file>.tmp` and only then replaces the real
+  file, so a failed run leaves the previous output untouched.
 - **File classification is extension/path-based**, driven entirely by the
   shared JSON maps in `templates/`. Add new extensions/paths there rather
   than editing `sdl_metadata_generator.py`.
@@ -342,6 +406,30 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
   it doesn't change the derived name.
 - **Must be run from inside the repository** — see "Running the script"
   above.
+
+## Checking changes (reference outputs)
+
+`tests/check_golden.py` guards against unintended changes to the output.
+It runs the generator on every folder in `tests/fixtures/` and compares
+the result with `tests/expected/<folder name>.json`:
+
+```bash
+python tests/check_golden.py
+```
+
+- `[OK]` = same content as the reference. Whitespace, key order and line
+  endings are ignored, list order is not.
+- `[FAIL]` lists the first differences by JSON path, e.g.
+  `$.versions[0].version: '1.0.1' -> '1.0.0'` (reference -> new), and
+  keeps the new output as `metadata/_check_<name>.json` for inspection.
+- Exit code 0 = all fixtures identical, 1 = at least one difference.
+
+The fixtures contain the real folder structure of an experiment with
+**empty** files plus its real `README.md` — the generator reads only file
+names, not their content. The references were generated with commit
+`5245240` and intentionally keep its known quirks (e.g. `par` -> `YAML`).
+When a change is **meant** to alter the output, regenerate the affected
+reference and say why in the commit message.
 
 ## Using the generated metadata file in SDL
 

@@ -44,7 +44,7 @@ user@system:~/SDL_Metadata_Generator$ python sdl_metadata_generator.py --path=..
 
 - `--path` (required): path to the experiment's data folder. Last segment = experiment name.
 - `--output_file` (optional, default `<exp_id>_metadata.json`): output filename.
-- `--debug` (optional flag): verbose logging + debug artifacts in `logs/` — see `README_extended.md`.
+- `--debug` (optional flag): verbose logging + log file in `logs/` — see `README_extended.md`.
 
 Output is written to `metadata/<output filename>`. If it already exists,
 you'll be asked whether to overwrite it — answering no aborts the run.

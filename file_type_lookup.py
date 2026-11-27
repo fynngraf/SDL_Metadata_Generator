@@ -64,14 +64,14 @@ def load_type_map(map_file: str = DEFAULT_MAP_FILE) -> dict:
         initial_map = dict(DEFAULT_TYPE_MAP)
         save_type_map(initial_map, map_file)
         return initial_map
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_type_map(type_map: dict, map_file: str = DEFAULT_MAP_FILE) -> None:
     path = Path(map_file)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(type_map, f, indent=4, sort_keys=True)
         f.write("\n")
 
@@ -82,14 +82,14 @@ def load_path_type_map(map_file: str = DEFAULT_PATH_MAP_FILE) -> dict:
         initial_map = dict(DEFAULT_PATH_TYPE_MAP)
         save_path_type_map(initial_map, map_file)
         return initial_map
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_path_type_map(path_type_map: dict, map_file: str = DEFAULT_PATH_MAP_FILE) -> None:
     path = Path(map_file)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(path_type_map, f, indent=4, sort_keys=True)
         f.write("\n")
 
