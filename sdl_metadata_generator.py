@@ -215,8 +215,7 @@ def main():
 
     # absolute and normalized, so that "./", "../x" or a trailing slash still
     # give the real folder name (symlinks are kept as given, not resolved)
-    input_path = Path(os.path.abspath(
-        args.path))  # e.g. /home/user/sdl_data/sdl_exp_309                                           # e.g. ../sdl_data/sdl_exp_309
+    input_path = Path(os.path.abspath(args.path))  # e.g. /home/user/sdl_data/sdl_exp_309
     exp_id = input_path.name                                                # e.g. "sdl_exp_309"
 
     handlers = [logging.StreamHandler()]
@@ -228,7 +227,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format="%(levelname)s: %(message)s", handlers=handlers)
 
     output_filename = args.output_file or f"{exp_id}_metadata.json"         # e.g. "sdl_exp_309_metadata.json"
-    output_file = Path(args.output_dir) / output_filename                   # e.g. ./metadata/sdl_exp_309_metadata.json
+    output_file = Path(args.output_dir) / output_filename                   # e.g. <script folder>/metadata/sdl_exp_309_metadata.json
 
 
     logger.info(f'Experiment : {exp_id}')
