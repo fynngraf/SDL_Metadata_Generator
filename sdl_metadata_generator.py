@@ -38,21 +38,53 @@ def load_authors(templates_dir: str) -> dict:
     with open(authors_file, "r", encoding="utf-8") as f:
         return json.load(f)
 
-
-# resolve author IDs to full author info
-def resolve_authors(author_ids, authors_db: dict) -> list:
-    # single ID as string -> convert to list
-    if isinstance(author_ids, str):
+# normalize the README's "author" value to a list of unique ID strings
+# (yaml reads unquoted IDs like 36 as numbers, but authors.json keys are text)
+def normalize_author_ids(author_ids) -> list:
+    if not isinstance(author_ids, list):
         author_ids = [author_ids]
 
-    resolved = []
+    normalized = []
     for author_id in author_ids:
-        if author_id in authors_db:
-            resolved.append(authors_db[author_id])
-        else:
-            logger.warning(f"Author ID {author_id} not found in authors.json - skipping")
+        # bool is a subclass of int in Python, so it is excluded explicitly
+        if isinstance(author_id, int) and not isinstance(author_id, bool):
+            author_id = str(author_id)
+        if not isinstance(author_id, str):
+            raise ValueError(
+                f"Author ID {author_id!r} in the README is not valid - "
+                f'write IDs as text, e.g. author: ["36", "82"]'
+            )
+        if author_id in normalized:
+            logger.warning(f"Author ID {author_id} is listed more than once - using it only once")
+            continue
+        normalized.append(author_id)
 
-    return resolved
+    return normalized
+
+
+# resolve author IDs to full author info; an unknown ID stops the run
+def resolve_authors(author_ids: list, authors_db: dict) -> list:
+    unknown = [author_id for author_id in author_ids if author_id not in authors_db]
+    if unknown:
+        raise ValueError(
+            f"Author ID(s) not found in authors.json: {', '.join(unknown)} - "
+            f"check the README or add the author(s) to authors.json"
+        )
+    return [authors_db[author_id] for author_id in author_ids]
+
+
+# normalize the README's "version" value to text
+# (yaml reads an unquoted 1.10 as the number 1.1 - that cannot be undone,
+# so decimal numbers are rejected instead of being converted)
+def normalize_version(version) -> str:
+    if isinstance(version, int) and not isinstance(version, bool):
+        return str(version)
+    if isinstance(version, str):
+        return version
+    raise ValueError(
+        f"version {version!r} in the README is not valid - write it as text in quotes, "
+        f'e.g. version: "1.10" (without quotes, yaml reads 1.10 as the number 1.1)'
+    )
 
 
 # build one author entry; only the fields SDL expects are taken from authors.json
@@ -213,12 +245,14 @@ def main():
     readme_descriptions = extract_descriptions(readme_data)
 
     required_fields = {"name", "description", "author", "version"}
-    missing_fields = {f for f in required_fields if not meta.get(f)}
+    # None, "" and [] count as missing - but not 0 (e.g. version: 0)
+    missing_fields = {f for f in required_fields if meta.get(f) in (None, "", [])}
     if missing_fields:
         raise ValueError(
             f"README yaml block in {readme_path} is missing required field(s): "
             f"{', '.join(sorted(missing_fields))}"
         )
+        meta["version"] = normalize_version(meta["version"])
     logger.debug(f'metadata : {meta}')
 
     # Optional spatialCoverage/temporalCoverage, attached further down once
@@ -245,7 +279,7 @@ def main():
     authors_db = load_authors(args.templates_dir)
 
     # resolve author IDs to full author info
-    authors = resolve_authors(meta['author'], authors_db)
+    authors = resolve_authors(normalize_author_ids(meta['author']), authors_db)
     logger.debug(f'authors : {authors}')
 
 
