@@ -252,7 +252,7 @@ def main():
             f"README yaml block in {readme_path} is missing required field(s): "
             f"{', '.join(sorted(missing_fields))}"
         )
-        meta["version"] = normalize_version(meta["version"])
+    meta["version"] = normalize_version(meta["version"])
     logger.debug(f'metadata : {meta}')
 
     # Optional spatialCoverage/temporalCoverage, attached further down once
