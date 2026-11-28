@@ -5,8 +5,9 @@ Determines the "file_type" (e.g. input, output, data_product) using two
 persistent dictionaries (JSON files):
 
 1. Path-keyword dictionary: checked first. If a keyword (e.g. "output")
-   appears anywhere in the file's path, the corresponding file_type is
-   used directly (e.g. ".../output/..." -> "output").
+   starts one of the words of a folder name between the experiment folder
+   and the file, the corresponding file_type is used directly
+   (e.g. "J1/output_scen4/..." -> "output").
 2. Extension dictionary: used as a fallback if no path keyword matched.
 
 Exception: an extension entry can be marked with "override_path": true -
@@ -23,10 +24,14 @@ automatically from then on (including future runs).
 
 import json
 import logging
+import re
 from pathlib import Path
 
 DEFAULT_MAP_FILE = "file_type_map.json"
 DEFAULT_PATH_MAP_FILE = "file_type_path_map.json"
+
+# folder names are split into words at "/", "_", "-", "." and spaces
+FOLDER_WORD_PATTERN = re.compile(r"[/_.\s-]+")
 
 logger = logging.getLogger(__name__)
 
@@ -107,24 +112,27 @@ def _normalize_type_entry(entry) -> tuple[str, bool]:
 
 def get_file_type_by_path(item_path: str, path_type_map: dict) -> str | None:
     """
-    Checks whether any keyword from path_type_map appears anywhere in
-    item_path (case-insensitive substring match). Returns the first
-    matching file_type, or None if no keyword matches.
+    Checks whether a keyword from path_type_map starts one of the words in
+    item_path (case-insensitive). Returns the first matching file_type, or
+    None if no keyword matches.
 
-    IMPORTANT: item_path should be the FOLDER path only (excluding the
-    file name itself) - e.g. ".../J1/output", not ".../J1/output/result.par".
-    Otherwise a keyword could accidentally match against part of the file
-    name (e.g. a file literally named "..._fault_...yaml" would wrongly
-    match a "fault" keyword even though it doesn't actually live in a
-    folder called "fault").
+    item_path must be the FOLDER path RELATIVE to the experiment folder
+    (e.g. "J1/output_scen4"), never the absolute path and never including
+    the file name - otherwise parent folders outside the experiment (e.g.
+    ".../output_tests/...") or the file name itself would match.
+
+    Folder names are split into words at "/", "_", "-", "." and spaces, and
+    a keyword matches a word that STARTS with it:
+      "output" matches "output", "outputs", "output_scen4", "normal_output"
+      "fault"  does NOT match "default_setup" (no word starts with "fault")
 
     Note: if multiple keywords match, the one that comes first when
     iterating the dictionary wins - keep the path-keyword dictionary free
     of ambiguous/overlapping keywords to avoid relying on this order.
     """
-    path_lower = item_path.lower()
+    words = [word for word in FOLDER_WORD_PATTERN.split(item_path.lower()) if word]
     for keyword, file_type in path_type_map.items():
-        if keyword.lower() in path_lower:
+        if any(word.startswith(keyword.lower()) for word in words):
             return file_type
     return None
 
@@ -143,10 +151,10 @@ def get_file_type(
     0. Extension dictionary, but ONLY if that extension is marked with
        "override_path": true - in that case it wins immediately, even
        over a matching path keyword.
-    1. Path keywords (if item_path is given): e.g. "output" anywhere in
-       the file's FOLDER path -> "output". item_path should be the folder
-       path only, excluding the file name itself (see get_file_type_by_path
-       for why). No interactive prompt if nothing matches here, since most
+    1. Path keywords (if item_path is given): e.g. "output" at the start
+       of a word in the file's folder path inside the experiment -> "output"
+       (see get_file_type_by_path for what item_path must contain).
+       No interactive prompt if nothing matches here, since most
        paths simply won't contain any of the configured keywords.
     2. Extension dictionary (normal, non-override case): e.g. ".par" -> "input".
        If the extension is not found at all, the user is asked
