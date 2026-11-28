@@ -260,12 +260,17 @@ the last dot, lowercased (`u1.bin` → `bin`).
        "csv": {"type": "product", "override_path": true}
    }
    ```
-2. `file_type_path_map.json`: the first keyword that occurs anywhere in
-   the file's **folder** path (case-insensitive substring match, file name
-   itself excluded). Note that this is the full folder path including the
-   `--path` prefix, so a keyword like `input` in a parent directory name
-   matches every file. If several keywords match, the first one in the
-   JSON wins — avoid overlapping keywords.
+2. `file_type_path_map.json`: a keyword matches if a folder name
+   **inside the experiment** (between `--path` and the file) contains a
+   word that **starts with** the keyword. Folder names are split into
+   words at `/`, `_`, `-`, `.` and spaces; case is ignored; the file name
+   itself is not checked. Examples for the keyword `output`:
+   `output`, `outputs`, `output_scen4`, `normal_output` match;
+   `throughput` does not. The keyword `fault` therefore no longer matches
+   a folder like `default_setup`. Folders **above** the experiment (the
+   `--path` prefix, e.g. `$SCRATCH/output_tests/...`) are never checked.
+   If several keywords match, the first one in the JSON wins — avoid
+   overlapping keywords.
 3. `file_type_map.json`, short form (`"par": "input"`).
 
 ### The tables learn new extensions

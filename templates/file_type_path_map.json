@@ -1,7 +1,6 @@
 {
     "input": "input",
     "output": "output",
-    "README": "input",
     "receiver": "output",
     "fault": "output"
 }

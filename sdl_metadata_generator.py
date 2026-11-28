@@ -389,7 +389,8 @@ def main():
             file_format = get_file_format(file_name, map_file=format_map_file, format_map=format_map)
             file_type = get_file_type(
                 file_name,
-                item_path=str(item.parent),
+                # folder path inside the experiment only, e.g. "J1/output"
+                item_path=item.parent.relative_to(input_path).as_posix(),
                 map_file=type_map_file,
                 type_map=type_map,
                 path_map_file=type_path_map_file,
