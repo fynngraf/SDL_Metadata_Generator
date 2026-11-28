@@ -35,8 +35,7 @@ extensions:
 
 ## Run
 
-Must currently be started from inside the `SDL_Metadata_Generator`
-directory itself:
+Can be started from any directory:
 
 ```bash
 user@system:~/SDL_Metadata_Generator$ python sdl_metadata_generator.py --path=../sdl_data/sdl_exp_309
@@ -44,10 +43,12 @@ user@system:~/SDL_Metadata_Generator$ python sdl_metadata_generator.py --path=..
 
 - `--path` (required): path to the experiment's data folder. Last segment = experiment name.
 - `--output_file` (optional, default `<exp_id>_metadata.json`): output filename.
+- `--output_dir` (optional, default `metadata/` next to the script): output directory.
 - `--debug` (optional flag): verbose logging + log file in `logs/` — see `README_extended.md`.
 
-Output is written to `metadata/<output filename>`. If it already exists,
-you'll be asked whether to overwrite it — answering no aborts the run.
+Output is written to `metadata/<output filename>` next to the script (or
+`--output_dir`). If it already exists, you'll be asked whether to
+overwrite it — answering no aborts the run.
 
 ## Use the result in SDL
 

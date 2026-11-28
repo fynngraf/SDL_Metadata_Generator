@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 #import numpy as np
 from pathlib import Path
 from file_format_lookup import get_file_format, load_format_map, DEFAULT_MAP_FILE as DEFAULT_FORMAT_MAP_FILE
@@ -26,6 +27,10 @@ from coverage_lookup import (
     build_per_dataset_coverage,
 )
 logger = logging.getLogger(__name__)
+
+# folder of this script - templates/, metadata/ and logs/ are located
+# relative to it, so the script works from any working directory
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 # load author database
 def load_authors(templates_dir: str) -> dict:
@@ -178,7 +183,7 @@ def parse_args():
     )
     parser.add_argument(
         "--path",
-        default="./",
+        required=True,
         help="Path to the experiment's data directory, e.g. ../sdl_data/sdl_exp_309. "
              "The last path segment is used as the experiment name."
     )
@@ -188,9 +193,14 @@ def parse_args():
         help="Name of the output file (default: <exp_id>_metadata.json)"
     )
     parser.add_argument(
+        "--output_dir",
+        default=str(SCRIPT_DIR / "metadata"),
+        help="Directory for the output file (default: metadata/ next to this script)"
+    )
+    parser.add_argument(
         "--templates_dir",
-        default="./templates",
-        help="Path to the templates directory"
+        default=str(SCRIPT_DIR / "templates"),
+        help="Path to the templates directory (default: templates/ next to this script)"
     )
     parser.add_argument(
         "--debug",
@@ -203,27 +213,29 @@ def parse_args():
 def main():
     args = parse_args()
 
-    input_path = Path(args.path)                                            # e.g. ../sdl_data/sdl_exp_309
+    # absolute and normalized, so that "./", "../x" or a trailing slash still
+    # give the real folder name (symlinks are kept as given, not resolved)
+    input_path = Path(os.path.abspath(args.path))  # e.g. /home/user/sdl_data/sdl_exp_309
     exp_id = input_path.name                                                # e.g. "sdl_exp_309"
 
     handlers = [logging.StreamHandler()]
     if args.debug:
-        log_file = Path("logs") / f"{exp_id}_run.log"
+        log_file = SCRIPT_DIR / "logs" / f"{exp_id}_run.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
         handlers.append(logging.FileHandler(log_file, mode="w", encoding="utf-8"))
 
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format="%(levelname)s: %(message)s", handlers=handlers)
 
     output_filename = args.output_file or f"{exp_id}_metadata.json"         # e.g. "sdl_exp_309_metadata.json"
-    output_file = Path("metadata") / output_filename                        # e.g. ./metadata/sdl_exp_309_metadata.json
+    output_file = Path(args.output_dir) / output_filename                   # e.g. <script folder>/metadata/sdl_exp_309_metadata.json
 
 
     logger.info(f'Experiment : {exp_id}')
     logger.info(f'Input Path : {input_path}')
     logger.info(f'Output File : {output_file}')
 
-    if not input_path.exists():
-        raise FileNotFoundError(f"Input path does not exist: {input_path}")
+    if not input_path.is_dir():
+        raise FileNotFoundError(f"Input path is not an existing directory: {input_path}")
 
     if output_file.exists():
         answer = input(f"\nOutput file already exists: {output_file}\nOverwrite? [y/n]: ").strip().lower()

@@ -302,17 +302,16 @@ the JSON files in `templates/` rather than relying on them.
 
 ## Running the script
 
-The script currently must be started from **inside the
-`SDL_Metadata_Generator` directory itself**:
+The script can be started from **any directory**. `templates/`,
+`metadata/` and `logs/` are always located next to the script itself,
+not in the current working directory:
 
 ```bash
 user@system:~/SDL_Metadata_Generator$ python sdl_metadata_generator.py --path=../sdl_data/sdl_exp_309
+user@system:~/sdl_data$ python ~/SDL_Metadata_Generator/sdl_metadata_generator.py --path=sdl_exp_309
 ```
 
-This is because `--templates_dir` defaults to the relative path
-`./templates`, which only resolves correctly when the current working
-directory is the repository root. See "Planned" at the end of this
-document for how this is intended to change.
+Both calls read the same experiment and write the same output file.
 
 ### Output file
 
@@ -320,9 +319,10 @@ By default, the output filename is `<exp_id>_metadata.json`, where
 `exp_id` is the last path segment of `--path` (e.g. `sdl_exp_309` →
 `sdl_exp_309_metadata.json`). Override it with `--output_file`.
 
-The file is written to `metadata/<output_filename>` (flat, directly under
-the repository root, not per experiment) — the `metadata/` folder is
-created automatically if it doesn't exist.
+The file is written to `metadata/<output_filename>` next to the script
+(flat, not per experiment), or to another directory given with
+`--output_dir`. The directory is created automatically if it doesn't
+exist.
 
 If the resulting output file already exists, the script asks:
 
@@ -351,17 +351,13 @@ The script uses Python's `logging` module instead of plain `print()`.
 
 ## Command-line arguments
 
-None of the arguments are marked `required=True` in `argparse` — the
-script will technically start with just `python sdl_metadata_generator.py`.
-In practice, though, `--path` always needs to be set explicitly (its
-default `./` only resolves to a meaningful experiment name by accident).
-
-| Argument           | Default                    | Required in practice? | Description                                                                 |
+| Argument           | Default                    | Required? | Description                                                                 |
 |---------------------|------------------------------|--------------------------|-------------------------------------------------------------------------------|
-| `--path`            | `./`                         | **Yes** — always         | Path to the experiment's data directory, e.g. `../sdl_data/sdl_exp_309`. The last path segment is used as the experiment name (`exp_id`). |
-| `--output_file`     | `<exp_id>_metadata.json`     | No                        | Name of the generated output file, written to `metadata/<output_file>`. |
-| `--debug`           | off                           | No                        | Enables verbose (`DEBUG`-level) logging and a log file under `logs/`. |
-| `--templates_dir`   | `./templates`                | No — **admin/advanced option**, not needed for normal use | Path to the templates directory (holds `authors.json` and the shared maps). Only relevant if that directory is moved or renamed; default matches this repo's layout. |
+| `--path`            | —                            | **Yes**                  | Path to the experiment's data directory, e.g. `../sdl_data/sdl_exp_309`. Relative paths, `.` and a trailing slash are fine. The last path segment is used as the experiment name (`exp_id`). Without `--path` the script stops with an error. |
+| `--output_file`     | `<exp_id>_metadata.json`     | No                        | Name of the generated output file. |
+| `--output_dir`      | `metadata/` next to the script | No                      | Directory the output file is written to. |
+| `--debug`           | off                           | No                        | Enables verbose (`DEBUG`-level) logging and a log file under `logs/` next to the script. |
+| `--templates_dir`   | `templates/` next to the script | No — **admin/advanced option**, not needed for normal use | Path to the templates directory (holds `authors.json` and the shared maps). Only relevant if that directory is moved or renamed. |
 
 Note: `argparse` treats `--flag=value` and `--flag value` (space instead
 of `=`) as equivalent — the `=` is optional, purely a matter of style.
@@ -415,10 +411,9 @@ writes the result to `metadata/sdl_exp_309_metadata.json`, and (because of
 - **The experiment name (`exp_id`) is derived from `--path`'s last path
   segment**, and is used both to locate the raw data (`--path` itself) and
   to build the default output filename and the `logs/` filenames. A
-  trailing slash in `--path` (e.g. `../sdl_data/sdl_exp_309/`) is fine —
-  it doesn't change the derived name.
-- **Must be run from inside the repository** — see "Running the script"
-  above.
+  trailing slash (`../sdl_data/sdl_exp_309/`), `.` (when started inside
+  the experiment folder) or `..` are fine — the path is made absolute
+  first, so the real folder name is used.
 
 ## Checking changes (reference outputs)
 
@@ -462,8 +457,8 @@ resulting metadata file via **Edit Bulk**.
 
 ## Planned
 
-The script is intended to eventually be runnable as a standalone command
-from anywhere, without needing to `cd` into this repository first:
+The script is intended to eventually be installable as a standalone
+command, without typing the path to the script:
 
 ```bash
 sdl_metadata_generator --path=<path to experiment directory>
@@ -475,6 +470,5 @@ made available via:
 export PYTHONPATH=$PYTHONPATH:/<path to SDL_Metadata_Generator>
 ```
 
-Not implemented yet — for now, run `python sdl_metadata_generator.py ...`
-from inside the `SDL_Metadata_Generator` directory as described in
-"Running the script".
+Not implemented yet — for now, run `python <path to>/sdl_metadata_generator.py ...`
+from any directory as described in "Running the script".
