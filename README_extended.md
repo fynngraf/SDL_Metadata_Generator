@@ -109,6 +109,10 @@ folders_fallback:
 - `name`, `description`, `author`, `version` are **required** — the
   script raises a clear error and stops if any of them is missing or
   empty (an empty string/list counts as missing, not just an absent key).
+- `version` is written to the metadata as text. Write it in quotes
+  (`version: "1.10"`): without quotes, yaml reads `1.10` as the number
+  `1.1`, so decimal numbers are rejected with an error. Whole numbers
+  (`version: 2`) are accepted and converted to text.
 - Any other top-level key (e.g. `keywords`, `path`) is optional and is
   passed through into the metadata file as-is.
 - `authors` and `versions` must **not** be used as keys: the generator
@@ -121,11 +125,15 @@ folders_fallback:
 ## Authors
 
 Authors are **not** written out by hand in the experiment's `README.md`.
-Instead, the README only lists **author IDs** (as strings) under `author`:
+Instead, the README only lists **author IDs** under `author`:
 
 ```yaml
-author: ["36", "78", "36" ]
+author: ["36", "78"]
 ```
+
+IDs are best written as text in quotes. Whole numbers without quotes
+(`author: [36, 78]`) and a single ID (`author: "36"`) work too. An ID
+listed twice is used only once (with a warning).
 
 Each ID is looked up in the shared `templates/authors.json` database,
 which maps an ID to the author's full information:
@@ -149,10 +157,10 @@ list is optional but should contain an ORCID (`"scheme": "orcid"`)
 whenever one is available.
 
 An ID referenced in a README that does **not** exist in `authors.json`
-logs a warning (`Author ID <id> not found in authors.json - skipping`) — the run
-continues, that author is simply missing from the output. Check the
-console output (or `logs/<exp_id>_run.log` with `--debug`) after each run
-to catch typos in author IDs.
+**stops the run** with an error that lists all unknown IDs
+(`Author ID(s) not found in authors.json: 99, 12 - ...`). Fix the typo
+in the README or add the missing author to `authors.json`, then run
+again.
 
 ## Descriptions
 
